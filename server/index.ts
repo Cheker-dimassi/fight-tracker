@@ -22,6 +22,19 @@ export function createServer() {
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
 
+  // Never trigger browser basic-auth prompts: strip any WWW-Authenticate headers
+  app.use((_req, res, next) => {
+    const originalSetHeader = res.setHeader.bind(res);
+    res.setHeader = (name: string, value: any) => {
+      if (String(name).toLowerCase() === "www-authenticate") {
+        return res; // ignore
+      }
+      originalSetHeader(name, value);
+      return res;
+    };
+    next();
+  });
+
   // Example API routes
   app.get("/api/ping", (_req, res) => {
     const ping = process.env.PING_MESSAGE ?? "ping";
