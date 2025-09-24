@@ -63,7 +63,9 @@ export const getMe: RequestHandler = (req, res) => {
   const auth = (req.headers["authorization"] as string | undefined) ?? "";
   const token = auth.startsWith("Bearer ") ? auth.slice(7) : auth;
   const email = tokenToEmail.get(token);
-  if (!email) return res.status(401).json({ error: "Unauthorized" });
+  if (!email) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
   const user = emailToUser.get(email)!;
   return res.json({ id: user.id, email: user.email });
 };
