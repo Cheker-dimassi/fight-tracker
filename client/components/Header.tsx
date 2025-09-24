@@ -1,9 +1,11 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Menu, X, Target, Users, Calendar, BarChart3, Info } from "lucide-react";
+import { clearToken, getMe, readToken } from "@/services/auth";
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
   const location = useLocation();
 
   const navigation = [
@@ -15,6 +17,22 @@ export default function Header() {
   ];
 
   const isActive = (path: string) => location.pathname === path;
+
+  useEffect(() => {
+    const token = readToken();
+    if (!token) {
+      setUserEmail(null);
+      return;
+    }
+    getMe(token)
+      .then((u) => setUserEmail(u.email))
+      .catch(() => setUserEmail(null));
+  }, [location.pathname]);
+
+  function handleSignOut() {
+    clearToken();
+    setUserEmail(null);
+  }
 
   return (
     <>
@@ -56,9 +74,18 @@ export default function Header() {
 
             {/* Desktop CTA */}
             <div className="hidden md:flex items-center gap-4">
-              <Link to="/signin" className="text-ufc-metallic hover:text-white font-oswald font-semibold tracking-wide transition-colors">
-                SIGN IN
-              </Link>
+              {userEmail ? (
+                <>
+                  <span className="text-ufc-metallic font-oswald text-sm tracking-wide">{userEmail}</span>
+                  <button onClick={handleSignOut} className="text-ufc-metallic hover:text-white font-oswald font-semibold tracking-wide transition-colors">
+                    SIGN OUT
+                  </button>
+                </>
+              ) : (
+                <Link to="/signin" className="text-ufc-metallic hover:text-white font-oswald font-semibold tracking-wide transition-colors">
+                  SIGN IN
+                </Link>
+              )}
               <a href="https://streameast.app" target="_blank" rel="noopener noreferrer" className="bg-ufc-red hover:bg-ufc-red-dark text-white px-6 py-2 font-oswald font-bold tracking-wider transition-all duration-300 hover:shadow-lg hover:shadow-ufc-red/30 border border-ufc-red hover:border-white">
                 WATCH LIVE
               </a>
@@ -96,9 +123,15 @@ export default function Header() {
                   );
                 })}
                 <div className="px-4 pt-4 border-t border-ufc-metallic-dark space-y-3">
-                  <Link to="/signin" className="w-full block text-left py-3 text-ufc-metallic hover:text-white font-oswald font-semibold tracking-wide transition-colors" onClick={() => setIsMenuOpen(false)}>
-                    SIGN IN
-                  </Link>
+                  {userEmail ? (
+                    <button onClick={() => { handleSignOut(); setIsMenuOpen(false); }} className="w-full text-left py-3 text-ufc-metallic hover:text-white font-oswald font-semibold tracking-wide transition-colors">
+                      SIGN OUT
+                    </button>
+                  ) : (
+                    <Link to="/signin" className="w-full block text-left py-3 text-ufc-metallic hover:text-white font-oswald font-semibold tracking-wide transition-colors" onClick={() => setIsMenuOpen(false)}>
+                      SIGN IN
+                    </Link>
+                  )}
                   <a href="https://streameast.app" target="_blank" rel="noopener noreferrer" className="w-full block text-center bg-ufc-red hover:bg-ufc-red-dark text-white py-3 font-oswald font-bold tracking-wider transition-all duration-300 border border-ufc-red hover:border-white">
                     WATCH LIVE
                   </a>
