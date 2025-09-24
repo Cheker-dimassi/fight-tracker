@@ -194,7 +194,7 @@ export default function Index() {
             
             <div className="flex flex-col sm:flex-row gap-6 justify-center">
               <a href="https://streameast.app" target="_blank" rel="noopener noreferrer" className="bg-ufc-red hover:bg-ufc-red-dark text-white px-8 py-4 font-oswald font-bold text-lg tracking-widest transition-all duration-300 hover:shadow-xl hover:shadow-ufc-red/30 border border-ufc-red hover:border-white ufc-glow">
-                WATCH LIVE NOW
+                STREAM NOW
               </a>
               <Link to="/events" className="border-2 border-white text-white hover:bg-white hover:text-ufc-black px-8 py-4 font-oswald font-bold text-lg tracking-widest transition-all duration-300">
                 VIEW ALL EVENTS
