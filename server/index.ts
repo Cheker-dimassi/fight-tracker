@@ -12,6 +12,7 @@ import {
 import { getUpcomingFightsProxy } from "./routes/upcoming";
 import { postFightCardStatusProxy } from "./routes/fightCard";
 import { getFighterImage, getEventPoster } from "./routes/images";
+import { getMe, postSignIn, postSignUp } from "./routes/auth";
 
 export function createServer() {
   const app = express();
@@ -43,6 +44,11 @@ export function createServer() {
   // Images
   app.get("/api/image/fighter", getFighterImage);
   app.get("/api/image/event", getEventPoster);
+
+  // Dev auth endpoints (in-memory)
+  app.post("/api/auth/signup", postSignUp);
+  app.post("/api/auth/signin", postSignIn);
+  app.get("/api/auth/me", getMe);
 
   // Add API status endpoint
   app.get("/api/status", (_req, res) => {

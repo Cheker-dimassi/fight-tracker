@@ -10,3 +10,19 @@
 export interface DemoResponse {
   message: string;
 }
+
+// Auth shared types
+export interface AuthRequest {
+  email: string;
+  password: string;
+}
+
+export interface AuthResponse {
+  token: string;
+  user: { id: string; email: string };
+}
+
+export interface MeResponse {
+  id: string;
+  email: string;
+}

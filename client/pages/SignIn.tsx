@@ -1,8 +1,39 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
+import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { signIn, signUp, saveToken } from "@/services/auth";
+import { toast } from "sonner";
 
 export default function SignIn() {
   const [mode, setMode] = useState<"signin" | "signup">("signin");
+
+  const navigate = useNavigate();
+
+  const schema = z.object({
+    email: z.string().email("Enter a valid email"),
+    password: z.string().min(6, "Minimum 6 characters"),
+  });
+
+  type FormValues = z.infer<typeof schema>;
+
+  const form = useForm<FormValues>({
+    resolver: zodResolver(schema),
+    defaultValues: { email: "", password: "" },
+  });
+
+  async function onSubmit(values: FormValues) {
+    try {
+      const action = mode === "signin" ? signIn : signUp;
+      const res = await action(values);
+      saveToken(res.token);
+      toast.success(mode === "signin" ? "Signed in" : "Account created");
+      navigate("/");
+    } catch (err: any) {
+      toast.error(err?.message || "Authentication failed");
+    }
+  }
 
   return (
     <div className="min-h-screen bg-ufc-black relative">
@@ -54,22 +85,30 @@ export default function SignIn() {
             </div>
 
             {/* Form */}
-            <form className="mt-6 space-y-4">
+            <form className="mt-6 space-y-4" onSubmit={form.handleSubmit(onSubmit)}>
               <div>
                 <label className="block text-sm font-oswald text-ufc-metallic mb-1">Email</label>
                 <input
                   type="email"
                   placeholder="you@example.com"
+                  {...form.register("email")}
                   className="w-full bg-transparent border border-ufc-metallic-dark focus:border-white outline-none px-4 py-3 text-white placeholder:text-ufc-metallic"
                 />
+                {form.formState.errors.email && (
+                  <p className="mt-1 text-xs text-ufc-red">{form.formState.errors.email.message}</p>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-oswald text-ufc-metallic mb-1">Password</label>
                 <input
                   type="password"
                   placeholder="Your password"
+                  {...form.register("password")}
                   className="w-full bg-transparent border border-ufc-metallic-dark focus:border-white outline-none px-4 py-3 text-white placeholder:text-ufc-metallic"
                 />
+                {form.formState.errors.password && (
+                  <p className="mt-1 text-xs text-ufc-red">{form.formState.errors.password.message}</p>
+                )}
               </div>
 
               <div className="text-right">
