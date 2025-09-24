@@ -1,4 +1,5 @@
 import { AuthRequest, AuthResponse, MeResponse } from "@shared/api";
+import { apiFetch } from "./http";
 
 const JSON_HEADERS: HeadersInit = { "Content-Type": "application/json" };
 
@@ -23,7 +24,7 @@ export async function signUp(payload: AuthRequest): Promise<AuthResponse> {
 }
 
 export async function getMe(token: string): Promise<MeResponse> {
-  const res = await fetch(`/api/auth/me`, {
+  const res = await apiFetch(`/api/auth/me`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   if (!res.ok) throw new Error((await res.json()).error ?? "Unauthorized");
