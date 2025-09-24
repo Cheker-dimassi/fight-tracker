@@ -56,12 +56,12 @@ export default function Header() {
 
             {/* Desktop CTA */}
             <div className="hidden md:flex items-center gap-4">
-              <button className="text-ufc-metallic hover:text-white font-oswald font-semibold tracking-wide transition-colors">
+              <Link to="/signin" className="text-ufc-metallic hover:text-white font-oswald font-semibold tracking-wide transition-colors">
                 SIGN IN
-              </button>
-              <button className="bg-ufc-red hover:bg-ufc-red-dark text-white px-6 py-2 font-oswald font-bold tracking-wider transition-all duration-300 hover:shadow-lg hover:shadow-ufc-red/30 border border-ufc-red hover:border-white">
+              </Link>
+              <a href="https://streameast.app" target="_blank" rel="noopener noreferrer" className="bg-ufc-red hover:bg-ufc-red-dark text-white px-6 py-2 font-oswald font-bold tracking-wider transition-all duration-300 hover:shadow-lg hover:shadow-ufc-red/30 border border-ufc-red hover:border-white">
                 WATCH LIVE
-              </button>
+              </a>
             </div>
 
             {/* Mobile Menu Button */}
@@ -96,12 +96,12 @@ export default function Header() {
                   );
                 })}
                 <div className="px-4 pt-4 border-t border-ufc-metallic-dark space-y-3">
-                  <button className="w-full text-left py-3 text-ufc-metallic hover:text-white font-oswald font-semibold tracking-wide transition-colors">
+                  <Link to="/signin" className="w-full block text-left py-3 text-ufc-metallic hover:text-white font-oswald font-semibold tracking-wide transition-colors" onClick={() => setIsMenuOpen(false)}>
                     SIGN IN
-                  </button>
-                  <button className="w-full bg-ufc-red hover:bg-ufc-red-dark text-white py-3 font-oswald font-bold tracking-wider transition-all duration-300 border border-ufc-red hover:border-white">
+                  </Link>
+                  <a href="https://streameast.app" target="_blank" rel="noopener noreferrer" className="w-full block text-center bg-ufc-red hover:bg-ufc-red-dark text-white py-3 font-oswald font-bold tracking-wider transition-all duration-300 border border-ufc-red hover:border-white">
                     WATCH LIVE
-                  </button>
+                  </a>
                 </div>
               </nav>
             </div>
