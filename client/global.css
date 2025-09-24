@@ -1,0 +1,207 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  /**
+   * Tailwind CSS theme
+   * tailwind.config.ts expects the following color variables to be expressed as HSL values.
+   * A different format will require also updating the theme in tailwind.config.ts.
+  */
+  :root {
+    --background: 220 13% 8%;
+    --foreground: 0 0% 98%;
+
+    --card: 220 13% 12%;
+    --card-foreground: 0 0% 98%;
+
+    --popover: 220 13% 12%;
+    --popover-foreground: 0 0% 98%;
+
+    --primary: 348 83% 47%;
+    --primary-foreground: 0 0% 98%;
+
+    --secondary: 215 15% 25%;
+    --secondary-foreground: 0 0% 90%;
+
+    --muted: 220 13% 18%;
+    --muted-foreground: 220 9% 46%;
+
+    --accent: 348 83% 47%;
+    --accent-foreground: 0 0% 98%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 222.2 84% 4.9%;
+
+    --radius: 0.5rem;
+
+    --sidebar-background: 0 0% 98%;
+
+    --sidebar-foreground: 240 5.3% 26.1%;
+
+    --sidebar-primary: 240 5.9% 10%;
+
+    --sidebar-primary-foreground: 0 0% 98%;
+
+    --sidebar-accent: 240 4.8% 95.9%;
+
+    --sidebar-accent-foreground: 240 5.9% 10%;
+
+    --sidebar-border: 220 13% 91%;
+
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .dark {
+    --background: 220 13% 4%;
+    --foreground: 0 0% 98%;
+
+    --card: 220 13% 8%;
+    --card-foreground: 0 0% 98%;
+
+    --popover: 220 13% 8%;
+    --popover-foreground: 0 0% 98%;
+
+    --primary: 348 83% 47%;
+    --primary-foreground: 0 0% 98%;
+
+    --secondary: 215 15% 20%;
+    --secondary-foreground: 0 0% 90%;
+
+    --muted: 220 13% 12%;
+    --muted-foreground: 220 9% 60%;
+
+    --accent: 348 83% 47%;
+    --accent-foreground: 0 0% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-bold;
+  }
+}
+
+@layer components {
+  .ufc-glow {
+    box-shadow: 0 0 20px rgba(229, 9, 20, 0.3);
+    transition: box-shadow 0.3s ease;
+  }
+
+  .ufc-glow:hover {
+    box-shadow: 0 0 30px rgba(229, 9, 20, 0.6), 0 0 60px rgba(229, 9, 20, 0.3);
+  }
+
+  .fight-card {
+    background: linear-gradient(135deg, rgba(26, 26, 26, 0.9) 0%, rgba(42, 42, 42, 0.9) 100%);
+    border: 2px solid rgba(229, 9, 20, 0.3);
+    transition: all 0.3s ease;
+  }
+
+  .fight-card:hover {
+    border-color: #E50914;
+    transform: translateY(-5px);
+  }
+
+  .vs-animation {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: .7;
+    }
+  }
+
+  .countdown-digit {
+    background: linear-gradient(145deg, #E50914, #B7070F);
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1), 0 4px 8px rgba(229, 9, 20, 0.3);
+  }
+
+  .cage-overlay {
+    background:
+      radial-gradient(circle at 25% 25%, rgba(229, 9, 20, 0.1) 0%, transparent 50%),
+      radial-gradient(circle at 75% 75%, rgba(229, 9, 20, 0.1) 0%, transparent 50%);
+  }
+
+  .button-hover {
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+  }
+
+  .button-hover::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transition: left 0.5s ease;
+  }
+
+  .button-hover:hover::before {
+    left: 100%;
+  }
+
+  .glow-on-hover {
+    transition: box-shadow 0.3s ease, transform 0.3s ease;
+  }
+
+  .glow-on-hover:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(229, 9, 20, 0.4);
+  }
+
+  .fighter-card-entrance {
+    animation: slideInUp 0.6s ease-out;
+  }
+
+  @keyframes slideInUp {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .text-glow {
+    text-shadow: 0 0 10px rgba(229, 9, 20, 0.5);
+  }
+
+  .border-glow {
+    border: 2px solid transparent;
+    background: linear-gradient(var(--background), var(--background)) padding-box,
+                linear-gradient(45deg, #E50914, #B7070F, #E50914) border-box;
+  }
+}
