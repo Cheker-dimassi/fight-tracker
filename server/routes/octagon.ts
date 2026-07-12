@@ -37,7 +37,7 @@ export function getAllFighters(_req: Request, res: Response) {
 // GET /fighter/:fighterId - Return specific fighter
 export function getFighter(req: Request, res: Response) {
   try {
-    const { fighterId } = req.params;
+    const fighterId = req.params.fighterId as string;
     const fighter = fallbackFighters.find(f => f.id === fighterId);
     
     if (!fighter) {
@@ -77,7 +77,7 @@ export function getRankings(_req: Request, res: Response) {
 // GET /division/:divisionId - Return division info
 export function getDivision(req: Request, res: Response) {
   try {
-    const { divisionId } = req.params;
+    const divisionId = req.params.divisionId as string;
     const divisionFighters = getFightersByWeightClass(divisionId);
     
     if (divisionFighters.length === 0) {

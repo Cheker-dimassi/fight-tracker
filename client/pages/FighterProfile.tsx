@@ -17,7 +17,9 @@ export default function FighterProfile() {
   // Use specific fighter if available, otherwise use first from all fighters
   const fighter = specificFighter || (allFighters && allFighters.length > 0 ? allFighters[0] : null);
   const isLoading = id ? fighterLoading : allLoading;
-  const imgUrl = fighter ? (fighter.imageUrl || useFighterImage(fighter.name).url) : null;
+  // Always call hook unconditionally (React rules of hooks)
+  const { url: fetchedImageUrl } = useFighterImage(fighter?.name || null);
+  const imgUrl = fighter ? (fighter.imageUrl || fetchedImageUrl || null) : null;
 
   // Generate mock timeline based on fighter's record
   const generateTimeline = (fighter: AppFighter) => {

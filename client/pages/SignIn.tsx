@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { signIn, signUp, saveToken } from "@/services/auth";
 import { toast } from "sonner";
+import { AuthRequest } from "@shared/api";
 
 export default function SignIn() {
   const [mode, setMode] = useState<"signin" | "signup">("signin");
@@ -26,7 +27,7 @@ export default function SignIn() {
   async function onSubmit(values: FormValues) {
     try {
       const action = mode === "signin" ? signIn : signUp;
-      const res = await action(values);
+      const res = await action(values as AuthRequest);
       saveToken(res.token);
       toast.success(mode === "signin" ? "Signed in" : "Account created");
       navigate("/");
