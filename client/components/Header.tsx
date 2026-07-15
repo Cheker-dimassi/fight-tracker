@@ -43,12 +43,15 @@ export default function Header() {
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
-            <Link to="/" className="flex items-center gap-3">
-              <img
-                src="https://cdn.builder.io/api/v1/image/assets%2Fa230484a7c954874b97562fb0844df5e%2Fc51b59a230f54eafbc14219455898c7f?format=webp&width=600"
-                alt="Fight Tracker logo"
-                className="h-12 md:h-16 w-auto object-contain drop-shadow-lg brightness-110 contrast-125"
-              />
+            <Link to="/" className="flex items-center gap-3 hover:opacity-90 transition-opacity">
+              <div className="flex items-center gap-2 font-oswald">
+                <div className="flex items-center justify-center w-10 h-10 bg-ufc-red text-white font-extrabold text-2xl skew-x-[-12deg] border border-white/20 shadow-md shadow-ufc-red/20">
+                  FT
+                </div>
+                <span className="text-xl font-black tracking-tighter text-white skew-x-[-12deg] hidden sm:inline-block">
+                  FIGHT<span className="text-ufc-red">TRACKER</span>
+                </span>
+              </div>
             </Link>
 
             {/* Desktop Navigation */}

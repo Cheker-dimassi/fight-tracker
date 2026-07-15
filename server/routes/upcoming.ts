@@ -11,6 +11,12 @@ export async function getUpcomingFightsProxy(_req: Request, res: Response) {
 
     const method = (process.env.ZYLA_UPCOMING_HTTP_METHOD || "POST").toUpperCase();
     const apiKey = process.env.ZYLA_API_KEY || process.env.ZYLA_UPCOMING_API_KEY || "";
+    if (!apiKey) {
+      return res.status(503).json({
+        error: "no_api_key",
+        message: "Upcoming fights schedule requires a Zyla API key. Please obtain a key from Zyla Labs and configure it as ZYLA_API_KEY in your .env file."
+      });
+    }
     const keyHeader = process.env.ZYLA_API_KEY_HEADER || process.env.ZYLA_UPCOMING_API_KEY_HEADER || "Authorization";
 
     const headers: Record<string, string> = {

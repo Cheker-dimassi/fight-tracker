@@ -25,3 +25,6 @@ dist-ssr
 
 .config/
 !.env
+
+# User authentication data
+.data/

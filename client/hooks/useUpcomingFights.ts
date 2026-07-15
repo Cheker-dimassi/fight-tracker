@@ -47,7 +47,16 @@ export function useUpcomingFights() {
       setLoading(true);
       setError(null);
       const res = await fetch("/api/upcoming-fights", { cache: "no-store" });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      if (!res.ok) {
+        let msg = `HTTP ${res.status}`;
+        try {
+          const errBody = await res.json();
+          if (errBody?.message) {
+            msg = errBody.message;
+          }
+        } catch {}
+        throw new Error(msg);
+      }
       const json = await res.json();
       const items = coerceArray(json);
       setData(normalize(items));

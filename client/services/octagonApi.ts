@@ -1,6 +1,7 @@
 import { OctagonFighter, OctagonDivision, OctagonRankings, AppFighter } from '@shared/octagon-api';
 import { fallbackFighters, getFightersByWeightClass, searchFighters } from '../data/fallbackFighters';
 import { getCsvFighterMerge } from './ufcData';
+import { transformToOctagonFighter } from '@shared/octagon-transform';
 
 /**
  * Overlays real dataset values (records, stats, height/reach/stance, weight
@@ -101,23 +102,7 @@ class OctagonApiService {
     } catch (error) {
       console.log('🔄 Using fallback fighter data due to API unavailability');
       this.usingFallback = true;
-      // Convert fallback data to OctagonFighter format
-      return fallbackFighters.map(fighter => ({
-        id: fighter.id,
-        name: fighter.name,
-        nickname: fighter.nickname,
-        weight_class: fighter.weightClass,
-        wins: fighter.record.wins,
-        losses: fighter.record.losses,
-        draws: fighter.record.draws,
-        nationality: fighter.nationality,
-        age: fighter.age,
-        height: fighter.height,
-        reach: fighter.reach,
-        stance: fighter.stance,
-        rank: fighter.rank ? parseInt(fighter.rank.replace('#', '')) : undefined,
-        image_url: fighter.imageUrl
-      }));
+      return fallbackFighters.map(transformToOctagonFighter);
     }
   }
 
@@ -133,22 +118,7 @@ class OctagonApiService {
         throw new Error(`Fighter with ID ${fighterId} not found in fallback data`);
       }
       
-      return {
-        id: fallbackFighter.id,
-        name: fallbackFighter.name,
-        nickname: fallbackFighter.nickname,
-        weight_class: fallbackFighter.weightClass,
-        wins: fallbackFighter.record.wins,
-        losses: fallbackFighter.record.losses,
-        draws: fallbackFighter.record.draws,
-        nationality: fallbackFighter.nationality,
-        age: fallbackFighter.age,
-        height: fallbackFighter.height,
-        reach: fallbackFighter.reach,
-        stance: fallbackFighter.stance,
-        rank: fallbackFighter.rank ? parseInt(fallbackFighter.rank.replace('#', '')) : undefined,
-        image_url: fallbackFighter.imageUrl
-      };
+      return transformToOctagonFighter(fallbackFighter);
     }
   }
 
@@ -164,22 +134,7 @@ class OctagonApiService {
       return {
         id: divisionId,
         name: divisionId,
-        fighters: divisionFighters.map(fighter => ({
-          id: fighter.id,
-          name: fighter.name,
-          nickname: fighter.nickname,
-          weight_class: fighter.weightClass,
-          wins: fighter.record.wins,
-          losses: fighter.record.losses,
-          draws: fighter.record.draws,
-          nationality: fighter.nationality,
-          age: fighter.age,
-          height: fighter.height,
-          reach: fighter.reach,
-          stance: fighter.stance,
-          rank: fighter.rank ? parseInt(fighter.rank.replace('#', '')) : undefined,
-          image_url: fighter.imageUrl
-        }))
+        fighters: divisionFighters.map(transformToOctagonFighter)
       };
     }
   }
@@ -196,22 +151,7 @@ class OctagonApiService {
       const weightClasses = [...new Set(fallbackFighters.map(f => f.weightClass))];
       
       weightClasses.forEach(weightClass => {
-        rankings[weightClass] = getFightersByWeightClass(weightClass).map(fighter => ({
-          id: fighter.id,
-          name: fighter.name,
-          nickname: fighter.nickname,
-          weight_class: fighter.weightClass,
-          wins: fighter.record.wins,
-          losses: fighter.record.losses,
-          draws: fighter.record.draws,
-          nationality: fighter.nationality,
-          age: fighter.age,
-          height: fighter.height,
-          reach: fighter.reach,
-          stance: fighter.stance,
-          rank: fighter.rank ? parseInt(fighter.rank.replace('#', '')) : undefined,
-          image_url: fighter.imageUrl
-        }));
+        rankings[weightClass] = getFightersByWeightClass(weightClass).map(transformToOctagonFighter);
       });
       
       return rankings;
