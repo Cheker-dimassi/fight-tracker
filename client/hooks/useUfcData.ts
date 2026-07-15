@@ -1,5 +1,16 @@
 import { useEffect, useState } from "react";
-import { getEvents, getEventById, getFightsForEvent, getFighterCount, UfcEvent, invalidateUfcDataCache } from "../services/ufcData";
+import {
+  getEvents,
+  getEventById,
+  getFightsForEventByDate,
+  getFighterCount,
+  getFightHistoryForFighter,
+  getFighterStatsByFighterName,
+  deriveRealStats,
+  UfcEvent,
+  invalidateUfcDataCache,
+} from "../services/ufcData";
+import { UfcFightRecord, FightTimelineEntry, RealFighterStats } from "@shared/ufc-gold";
 import { octagonApi } from "../services/octagonApi";
 
 export function useUfcEvents() {
@@ -39,7 +50,7 @@ export function useUfcEvent(eventId: string | null) {
   const [data, setData] = useState<UfcEvent | null>(null);
   const [loading, setLoading] = useState(!!eventId);
   const [error, setError] = useState<string | null>(null);
-  const [fights, setFights] = useState<any[]>([]);
+  const [fights, setFights] = useState<UfcFightRecord[]>([]);
 
   useEffect(() => {
     if (!eventId) return;
@@ -49,8 +60,10 @@ export function useUfcEvent(eventId: string | null) {
         const event = await getEventById(eventId);
         if (!event) throw new Error("Event not found");
         setData(event);
-        const fights = await getFightsForEvent(event.EVENT);
-        setFights(fights);
+        // The gold dataset has no event-name column, so fights are joined to
+        // this event by calendar date rather than by name.
+        const fightsForDate = await getFightsForEventByDate(event.DATE);
+        setFights(fightsForDate);
       } catch (e: any) {
         setError(e.message || String(e));
       } finally {
@@ -102,4 +115,61 @@ export function useUfcCounts() {
   }, []);
 
   return { fighters, events, loading, error };
+}
+
+// Real per-fighter career fight history, replacing the old random generateTimeline().
+export function useFighterFightHistory(fighterName: string | null) {
+  const [data, setData] = useState<FightTimelineEntry[]>([]);
+  const [loading, setLoading] = useState(!!fighterName);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!fighterName) return;
+    let mounted = true;
+    (async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const history = await getFightHistoryForFighter(fighterName);
+        if (mounted) setData(history);
+      } catch (e: any) {
+        if (mounted) {
+          setError(e.message || String(e));
+          setData([]);
+        }
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    })();
+    return () => { mounted = false; };
+  }, [fighterName]);
+
+  return { data, loading, error };
+}
+
+// Real per-fighter stat-bar values, replacing the old random generateMockStats().
+export function useRealFighterStats(
+  fighterName: string | null,
+  record: { wins: number; losses: number; draws: number } | null,
+) {
+  const [data, setData] = useState<RealFighterStats | null>(null);
+  const [loading, setLoading] = useState(!!fighterName);
+
+  useEffect(() => {
+    if (!fighterName || !record) return;
+    let mounted = true;
+    (async () => {
+      try {
+        setLoading(true);
+        const statsRow = await getFighterStatsByFighterName(fighterName).catch(() => null);
+        const derived = deriveRealStats(statsRow, record);
+        if (mounted) setData(derived);
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    })();
+    return () => { mounted = false; };
+  }, [fighterName, record?.wins, record?.losses, record?.draws]);
+
+  return { data, loading };
 }

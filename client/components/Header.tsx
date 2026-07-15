@@ -45,7 +45,7 @@ export default function Header() {
             {/* Logo */}
             <Link to="/" className="flex items-center gap-3">
               <img
-                src="/logo.webp"
+                src="https://cdn.builder.io/api/v1/image/assets%2Fa230484a7c954874b97562fb0844df5e%2Fc51b59a230f54eafbc14219455898c7f?format=webp&width=600"
                 alt="Fight Tracker logo"
                 className="h-12 md:h-16 w-auto object-contain drop-shadow-lg brightness-110 contrast-125"
               />

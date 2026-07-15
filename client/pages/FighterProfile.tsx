@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { ArrowLeft, Trophy, Target, Clock, MapPin, Users, TrendingUp, Award, AlertTriangle } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
 import { useFighter, useAllFighters } from "../hooks/useOctagonApi";
-import { AppFighter } from "@shared/octagon-api";
+import { useFighterFightHistory, useRealFighterStats } from "../hooks/useUfcData";
 import { transformRankDisplay, isChampion } from "../lib/rankUtils";
 import { useFighterImage } from "../hooks/useImage";
 
@@ -17,39 +17,14 @@ export default function FighterProfile() {
   // Use specific fighter if available, otherwise use first from all fighters
   const fighter = specificFighter || (allFighters && allFighters.length > 0 ? allFighters[0] : null);
   const isLoading = id ? fighterLoading : allLoading;
-  // Always call hook unconditionally (React rules of hooks)
+  // Always call hooks unconditionally (React rules of hooks)
   const { url: fetchedImageUrl } = useFighterImage(fighter?.name || null);
   const imgUrl = fighter ? (fighter.imageUrl || fetchedImageUrl || null) : null;
 
-  // Generate mock timeline based on fighter's record
-  const generateTimeline = (fighter: AppFighter) => {
-    const timeline = [];
-    const totalFights = fighter.record.wins + fighter.record.losses + fighter.record.draws;
-    const months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
-    
-    // Generate last 5 fights
-    for (let i = 0; i < Math.min(5, totalFights); i++) {
-      const isWin = Math.random() < (fighter.record.wins / totalFights);
-      const date = new Date();
-      date.setMonth(date.getMonth() - (i * 3));
-      
-      const methods = isWin 
-        ? ['Decision (Unanimous)', 'Submission (RNC)', 'KO/TKO', 'Decision (Split)', 'Submission (Armbar)']
-        : ['Decision (Unanimous)', 'Decision (Split)', 'Submission (RNC)', 'KO/TKO'];
-      
-      timeline.push({
-        date: `${months[date.getMonth()]} ${date.getFullYear()}`,
-        event: `UFC ${250 + i}`,
-        opponent: `Fighter ${String.fromCharCode(65 + i)}`,
-        result: isWin ? 'WIN' : 'LOSS',
-        method: methods[Math.floor(Math.random() * methods.length)],
-        round: Math.floor(Math.random() * 5) + 1,
-        time: `${Math.floor(Math.random() * 5)}:${String(Math.floor(Math.random() * 60)).padStart(2, '0')}`
-      });
-    }
-    
-    return timeline;
-  };
+  // Real career fight history and stat-bar values, derived from the UFC gold
+  // dataset instead of randomly generated on every render.
+  const { data: realTimeline, loading: timelineLoading } = useFighterFightHistory(fighter?.name || null);
+  const { data: realStats } = useRealFighterStats(fighter?.name || null, fighter?.record || null);
 
   const StatBar = ({ stat, value }: { stat: string; value: number }) => (
     <div className="mb-6">
@@ -132,7 +107,10 @@ export default function FighterProfile() {
     );
   }
 
-  const timeline = generateTimeline(fighter);
+  // Prefer real, dataset-derived stats; fall back to whatever useFighter already
+  // provided (e.g. from fallbackFighters.ts) while the real-stats lookup loads.
+  const displayStats = realStats || fighter.stats;
+  const timeline = realTimeline;
 
   return (
     <div className="min-h-screen bg-ufc-black">
@@ -278,12 +256,12 @@ export default function FighterProfile() {
             <>
               <div className="fight-card p-6">
                 <h3 className="font-oswald text-xl text-white mb-6 tracking-widest">FIGHTING STATS</h3>
-                <StatBar stat="Striking Accuracy" value={fighter.stats.striking} />
-                <StatBar stat="Grappling" value={fighter.stats.grappling} />
-                <StatBar stat="Stamina" value={fighter.stats.stamina} />
-                <StatBar stat="Chin" value={fighter.stats.chin} />
-                <StatBar stat="Heart" value={fighter.stats.heart} />
-                <StatBar stat="Fight IQ" value={fighter.stats.fightIQ} />
+                <StatBar stat="Striking Accuracy" value={displayStats.striking} />
+                <StatBar stat="Grappling" value={displayStats.grappling} />
+                <StatBar stat="Stamina" value={displayStats.stamina} />
+                <StatBar stat="Chin" value={displayStats.chin} />
+                <StatBar stat="Heart" value={displayStats.heart} />
+                <StatBar stat="Fight IQ" value={displayStats.fightIQ} />
               </div>
               <div className="fight-card p-6">
                 <h3 className="font-oswald text-xl text-white mb-6 tracking-widest">FIGHTER INFO</h3>
@@ -324,6 +302,14 @@ export default function FighterProfile() {
             <div className="lg:col-span-2">
               <div className="fight-card p-6">
                 <h3 className="font-oswald text-xl text-white mb-6 tracking-widest">FIGHT HISTORY</h3>
+                {timelineLoading && (
+                  <p className="text-ufc-metallic font-oswald tracking-wide">Loading fight history…</p>
+                )}
+                {!timelineLoading && timeline.length === 0 && (
+                  <p className="text-ufc-metallic font-oswald tracking-wide">
+                    No historical UFC bouts found for this fighter in the dataset.
+                  </p>
+                )}
                 <div className="space-y-6">
                   {timeline.map((fight, index) => (
                     <div key={index} className="border-l-4 border-ufc-red pl-6 pb-6 last:pb-0">

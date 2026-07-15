@@ -23,7 +23,7 @@ export function useAllFighters(): UseApiState<AppFighter[]> {
       setLoading(true);
       setError(null);
       const fighters = await octagonApi.getAllFighters(); // Raw fighters from API or fallback
-      const appFighters = fighters.map(f => octagonApi.transformFighter(f));
+      const appFighters = await Promise.all(fighters.map(f => octagonApi.transformFighter(f)));
       setData(appFighters);
       setIsUsingFallback(octagonApi.isUsingFallback());
       setStatusMessage(octagonApi.getStatusMessage());
@@ -67,7 +67,7 @@ export function useFighter(fighterId: string | null): UseApiState<AppFighter> {
       setLoading(true);
       setError(null);
       const rawFighter = await octagonApi.getFighter(fighterId);
-      const fighter = octagonApi.transformFighter(rawFighter);
+      const fighter = await octagonApi.transformFighter(rawFighter);
       setData(fighter);
       setIsUsingFallback(octagonApi.isUsingFallback());
       setStatusMessage(octagonApi.getStatusMessage());

@@ -1,5 +1,32 @@
 import { OctagonFighter, OctagonDivision, OctagonRankings, AppFighter } from '@shared/octagon-api';
 import { fallbackFighters, getFightersByWeightClass, searchFighters } from '../data/fallbackFighters';
+import { getCsvFighterMerge } from './ufcData';
+
+/**
+ * Overlays real dataset values (records, stats, height/reach/stance, weight
+ * class) onto a fighter object, by name. This is what makes the CSV the
+ * primary source: fallbackFighters.ts / the live API only fill in what the
+ * CSV doesn't have (nickname, nationality, image) or fighters missing from
+ * the CSV entirely.
+ */
+async function applyCsvOverride(base: AppFighter): Promise<AppFighter> {
+  try {
+    const merge = await getCsvFighterMerge(base.name);
+    if (!merge) return base;
+    return {
+      ...base,
+      record: { ...base.record, wins: merge.wins, losses: merge.losses, draws: merge.draws },
+      weightClass: merge.weightClass || base.weightClass,
+      height: merge.height || base.height,
+      reach: merge.reach || base.reach,
+      stance: merge.stance || base.stance,
+      age: merge.age ?? base.age,
+      stats: merge.stats,
+    };
+  } catch {
+    return base;
+  }
+}
 
 // In development, API runs on same port as Vite dev server (8080)
 // In production, API_BASE_URL should be set via environment variable
@@ -191,34 +218,39 @@ class OctagonApiService {
     }
   }
 
-  // Transform API data to our app format
-  transformFighter(octagonFighter: OctagonFighter): AppFighter {
-    // Use existing stats from fallback if available, otherwise generate
+  // Transform API data to our app format. Records/stats/biometrics are then
+  // overridden by the real CSV dataset when the fighter is found there (see
+  // applyCsvOverride) — fallbackFighters.ts and the live API are only used
+  // for bio fields the CSV lacks (nickname, nationality, image) or as a
+  // complete fallback when a fighter isn't in the CSV at all.
+  async transformFighter(octagonFighter: OctagonFighter): Promise<AppFighter> {
     const existingFighter = fallbackFighters.find(f => 
       f.name.toLowerCase() === octagonFighter.name.toLowerCase()
     );
     
     const stats = existingFighter ? existingFighter.stats : this.generateMockStats(octagonFighter);
     
-    return {
+    const base: AppFighter = {
       id: octagonFighter.id,
       name: octagonFighter.name.toUpperCase(),
-      nickname: octagonFighter.nickname || '',
+      nickname: octagonFighter.nickname || existingFighter?.nickname || '',
       record: {
-        wins: octagonFighter.wins || octagonFighter.record?.wins || 0,
-        losses: octagonFighter.losses || octagonFighter.record?.losses || 0,
-        draws: octagonFighter.draws || octagonFighter.record?.draws || 0
+        wins: octagonFighter.wins || octagonFighter.record?.wins || existingFighter?.record.wins || 0,
+        losses: octagonFighter.losses || octagonFighter.record?.losses || existingFighter?.record.losses || 0,
+        draws: octagonFighter.draws || octagonFighter.record?.draws || existingFighter?.record.draws || 0
       },
-      weightClass: octagonFighter.weight_class,
-      rank: octagonFighter.rank ? `#${octagonFighter.rank}` : undefined,
-      age: octagonFighter.age,
-      height: octagonFighter.height,
-      reach: octagonFighter.reach,
-      stance: octagonFighter.stance,
-      nationality: octagonFighter.nationality,
-      imageUrl: octagonFighter.image_url,
+      weightClass: octagonFighter.weight_class || existingFighter?.weightClass || '',
+      rank: octagonFighter.rank ? `#${octagonFighter.rank}` : existingFighter?.rank,
+      age: octagonFighter.age ?? existingFighter?.age,
+      height: octagonFighter.height || existingFighter?.height,
+      reach: octagonFighter.reach || existingFighter?.reach,
+      stance: octagonFighter.stance || existingFighter?.stance,
+      nationality: octagonFighter.nationality || existingFighter?.nationality,
+      imageUrl: octagonFighter.image_url || existingFighter?.imageUrl,
       stats: stats
     };
+
+    return applyCsvOverride(base);
   }
 
   private generateMockStats(fighter: OctagonFighter): AppFighter['stats'] {
@@ -244,12 +276,12 @@ class OctagonApiService {
   async getFightersByWeightClass(weightClass: string): Promise<AppFighter[]> {
     try {
       const allFighters = await this.getAllFighters();
-      return allFighters
-        .filter(fighter => fighter.weight_class.toLowerCase().includes(weightClass.toLowerCase()))
-        .map(fighter => this.transformFighter(fighter));
+      const filtered = allFighters.filter(fighter => fighter.weight_class.toLowerCase().includes(weightClass.toLowerCase()));
+      return await Promise.all(filtered.map(fighter => this.transformFighter(fighter)));
     } catch (error) {
       console.log(`🔄 Using fallback fighters for weight class: ${weightClass}`);
-      return getFightersByWeightClass(weightClass);
+      const fallback = getFightersByWeightClass(weightClass);
+      return Promise.all(fallback.map(f => applyCsvOverride(f)));
     }
   }
 
@@ -257,12 +289,11 @@ class OctagonApiService {
   async getTopFighters(limit: number = 20): Promise<AppFighter[]> {
     try {
       const allFighters = await this.getAllFighters();
-      return allFighters
-        .slice(0, limit)
-        .map(fighter => this.transformFighter(fighter));
+      const top = allFighters.slice(0, limit);
+      return await Promise.all(top.map(fighter => this.transformFighter(fighter)));
     } catch (error) {
       console.log('🔄 Using fallback top fighters data');
-      return fallbackFighters.slice(0, limit);
+      return Promise.all(fallbackFighters.slice(0, limit).map(f => applyCsvOverride(f)));
     }
   }
 
@@ -272,15 +303,15 @@ class OctagonApiService {
       const allFighters = await this.getAllFighters();
       const searchTerm = query.toLowerCase();
       
-      return allFighters
-        .filter(fighter => 
-          fighter.name.toLowerCase().includes(searchTerm) ||
-          (fighter.nickname && fighter.nickname.toLowerCase().includes(searchTerm))
-        )
-        .map(fighter => this.transformFighter(fighter));
+      const filtered = allFighters.filter(fighter => 
+        fighter.name.toLowerCase().includes(searchTerm) ||
+        (fighter.nickname && fighter.nickname.toLowerCase().includes(searchTerm))
+      );
+      return await Promise.all(filtered.map(fighter => this.transformFighter(fighter)));
     } catch (error) {
       console.log(`🔄 Using fallback search for: ${query}`);
-      return searchFighters(query);
+      const fallback = searchFighters(query);
+      return Promise.all(fallback.map(f => applyCsvOverride(f)));
     }
   }
 

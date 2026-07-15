@@ -62,22 +62,19 @@ export default function EventPage() {
 
             <div className="space-y-6">
               {fights.map((f, idx) => (
-                <div key={`${f.BOUT}-${idx}`} className="fight-card ufc-glow p-6">
+                <div key={`${f.Fight_URL || idx}`} className="fight-card ufc-glow p-6">
                   <div className="text-center mb-4">
-                    <h3 className="font-anton text-2xl text-white tracking-wider">{f.BOUT}</h3>
-                    {f.result && (
-                      <p className="font-oswald text-ufc-metallic mt-2">
-                        {f.result.WEIGHTCLASS} • {f.result.METHOD} • R{f.result.ROUND} {f.result.TIME}
-                      </p>
-                    )}
+                    <h3 className="font-anton text-2xl text-white tracking-wider">
+                      {f.Fighter_1} vs. {f.Fighter_2}
+                    </h3>
+                    <p className="font-oswald text-ufc-metallic mt-2">
+                      {f.Weight_Class} • {f.Method} • R{f.End_Round} {f.End_Time}
+                    </p>
                   </div>
-                  {f.result && (
-                    <div className="grid sm:grid-cols-2 gap-4 font-oswald text-sm text-ufc-metallic">
-                      <div>Outcome: <span className="text-white">{f.result.OUTCOME}</span></div>
-                      <div>Referee: <span className="text-white">{f.result.REFEREE}</span></div>
-                      <div className="sm:col-span-2">Details: <span className="text-white">{f.result.DETAILS}</span></div>
-                    </div>
-                  )}
+                  <div className="grid sm:grid-cols-2 gap-4 font-oswald text-sm text-ufc-metallic">
+                    <div>Winner: <span className="text-white">{f.Winner || "N/A"}</span></div>
+                    <div>Sig. Strikes: <span className="text-white">{f.F1_Sig_Landed}/{f.F1_Sig_Att} vs {f.F2_Sig_Landed}/{f.F2_Sig_Att}</span></div>
+                  </div>
                 </div>
               ))}
             </div>
@@ -85,7 +82,7 @@ export default function EventPage() {
             <div className="grid md:grid-cols-3 gap-6 mt-16">
               {[
                 { icon: Users, value: String(fights.length || 0), label: "FIGHTS ON CARD" },
-                { icon: Trophy, value: `${Math.max(0, fights.filter(f => (f.result?.WEIGHTCLASS || '').toLowerCase().includes('title')).length)}`, label: "TITLE FIGHTS" },
+                { icon: Trophy, value: `${Math.max(0, fights.filter(f => (f.Weight_Class || '').toLowerCase().includes('title')).length)}`, label: "TITLE FIGHTS" },
                 { icon: Clock, value: "—", label: "DURATION" }
               ].map((stat, index) => {
                 const Icon = stat.icon as any;
