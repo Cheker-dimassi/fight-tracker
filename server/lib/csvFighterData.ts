@@ -69,27 +69,27 @@ export function deriveRealStats(
 
   if (!stats) {
     return {
-      striking: clamp(65 + winRate * 20),
-      grappling: clamp(65 + winRate * 20),
-      stamina: clamp(70 + Math.min(totalFights, 15)),
-      chin: clamp(70 + winRate * 15),
-      heart: clamp(60 + winRate * 30),
-      fightIQ: clamp(65 + winRate * 20),
+      striking: clamp(70 + winRate * 20),
+      grappling: clamp(70 + winRate * 20),
+      stamina: clamp(75 + Math.min(totalFights, 15)),
+      chin: clamp(75 + winRate * 15),
+      heart: clamp(70 + winRate * 25),
+      fightIQ: clamp(70 + winRate * 20),
     };
   }
 
-  const strAcc = pctToNumber(stats.Str_Acc) ?? 50;
+  const strAcc = pctToNumber(stats.Str_Acc) ?? 45;
   const strDef = pctToNumber(stats.Str_Def) ?? 50;
-  const tdAcc = pctToNumber(stats.TD_Acc) ?? 30;
+  const tdAcc = pctToNumber(stats.TD_Acc) ?? 35;
   const tdDef = pctToNumber(stats.TD_Def) ?? 50;
 
   return {
-    striking: clamp(strAcc),
-    grappling: clamp((tdAcc + tdDef) / 2),
-    stamina: clamp(70 + Math.min(totalFights, 20)),
-    chin: clamp(strDef),
-    heart: clamp(40 + winRate * 55),
-    fightIQ: clamp((strAcc + strDef + tdAcc + tdDef) / 4),
+    striking: clamp(65 + (strAcc - 42) * 1.5),
+    grappling: clamp(65 + (((tdAcc * 1.2) + tdDef) / 2 - 45) * 1.3),
+    stamina: clamp(75 + Math.min(totalFights, 18)),
+    chin: clamp(70 + (strDef - 55) * 1.6),
+    heart: clamp(65 + winRate * 25 + Math.min(totalFights, 10)),
+    fightIQ: clamp(70 + winRate * 15 + Math.min(totalFights, 10)),
   };
 }
 

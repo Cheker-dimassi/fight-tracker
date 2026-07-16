@@ -22,7 +22,7 @@ async function applyCsvOverride(base: AppFighter): Promise<AppFighter> {
       reach: merge.reach || base.reach,
       stance: merge.stance || base.stance,
       age: merge.age ?? base.age,
-      stats: merge.stats,
+      stats: base.stats && Object.keys(base.stats).length > 0 ? base.stats : merge.stats,
     };
   } catch {
     return base;
