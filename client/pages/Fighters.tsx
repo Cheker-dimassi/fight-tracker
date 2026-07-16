@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import { useFighterImage } from "../hooks/useImage";
 import { useAllFighters } from "../hooks/useOctagonApi";
 import { AppFighter } from "@shared/octagon-api";
-import { transformRankDisplay, isChampion } from "../lib/rankUtils";
+import { transformRankDisplay, isChampion, isLegend } from "../lib/rankUtils";
 
 export default function Fighters() {
   const {
@@ -19,10 +19,13 @@ export default function Fighters() {
   const [selectedWeightClass, setSelectedWeightClass] = useState("all");
   const [sortBy, setSortBy] = useState("name");
 
-  // Get unique weight classes
+  // Get unique weight classes (plus synthetic "Legends" entry)
   const weightClasses = useMemo(() => {
     if (!allFighters) return [];
-    const classes = [...new Set(allFighters.map(f => f.weightClass))];
+    const classes = [...new Set(allFighters
+      .filter(f => !isLegend(f.rank))
+      .map(f => f.weightClass)
+    )];
     return classes.sort();
   }, [allFighters]);
 
@@ -31,13 +34,13 @@ export default function Fighters() {
     if (!allFighters) return [];
 
     let filtered = allFighters.filter(fighter => {
-      const matchesSearch = 
+      const matchesSearch =
         fighter.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (fighter.nickname && fighter.nickname.toLowerCase().includes(searchTerm.toLowerCase()));
-      
-      const matchesWeightClass = 
-        selectedWeightClass === "all" || 
-        fighter.weightClass.toLowerCase() === selectedWeightClass.toLowerCase();
+
+      const matchesWeightClass =
+        selectedWeightClass === 'all' ||
+        (selectedWeightClass === 'legends' ? isLegend(fighter.rank) : fighter.weightClass.toLowerCase() === selectedWeightClass.toLowerCase() && !isLegend(fighter.rank));
 
       return matchesSearch && matchesWeightClass;
     });
@@ -96,6 +99,8 @@ export default function Fighters() {
                 <span className={`px-2 py-1 font-oswald font-bold text-xs tracking-widest ${
                   isChampion(fighter.rank)
                     ? 'bg-gradient-to-r from-yellow-400 to-yellow-600 text-black'
+                    : isLegend(fighter.rank)
+                    ? 'bg-gradient-to-r from-amber-700 to-yellow-500 text-white'
                     : 'bg-ufc-red text-white'
                 }`}>
                   {transformRankDisplay(fighter.rank)}
@@ -240,7 +245,8 @@ export default function Fighters() {
                 onChange={(e) => setSelectedWeightClass(e.target.value)}
                 className="w-full bg-ufc-black text-white border border-ufc-metallic-dark rounded p-3 font-oswald tracking-wide focus:outline-none focus:border-ufc-red appearance-none"
               >
-                <option value="all">All Weight Classes</option>
+                <option value="all">All Fighters</option>
+                <option value="legends">🏆 Legends & Retired</option>
                 {weightClasses.map(weightClass => (
                   <option key={weightClass} value={weightClass}>
                     {weightClass}

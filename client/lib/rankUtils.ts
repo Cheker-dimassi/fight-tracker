@@ -7,14 +7,17 @@
  */
 export function transformRankDisplay(rank: string | undefined): string | null {
   if (!rank) return null;
-  
+
+  // Legend fighters get a special badge
+  if (rank.toLowerCase() === 'legend') return 'LEGEND';
+
   // Extract the number from rank (e.g., "#1", "#2", etc.)
   const rankNumber = parseInt(rank.replace('#', ''));
-  
+
   if (isNaN(rankNumber)) return `RANK ${rank}`;
-  
+
   if (rankNumber === 1) {
-    return "CHAMPION";
+    return 'CHAMPION';
   } else {
     return `RANK #${rankNumber - 1}`;
   }
@@ -24,7 +27,14 @@ export function transformRankDisplay(rank: string | undefined): string | null {
  * Check if a fighter is the champion (rank #1)
  */
 export function isChampion(rank: string | undefined): boolean {
-  return rank === "#1";
+  return rank === '#1';
+}
+
+/**
+ * Check if a fighter is a legend / retired hall-of-famer
+ */
+export function isLegend(rank: string | undefined): boolean {
+  return rank?.toLowerCase() === 'legend';
 }
 
 /**

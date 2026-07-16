@@ -1864,6 +1864,328 @@ export const fallbackFighters: AppFighter[] = [
     nationality: "USA",
     imageUrl: undefined,
     stats: { striking: 85, grappling: 96, stamina: 92, chin: 88, heart: 93, fightIQ: 90 }
+  },
+
+  // ─── LEGENDS & RETIRED FIGHTERS ────────────────────────────────────────────
+  // Jon Jones
+  {
+    id: "124",
+    name: "JON JONES",
+    nickname: "Bones",
+    record: { wins: 27, losses: 1, draws: 0 },
+    weightClass: "Heavyweight",
+    rank: "Legend",
+    age: 37,
+    height: "6'4\"",
+    reach: "84.5\"",
+    stance: "Orthodox",
+    nationality: "USA",
+    imageUrl: undefined,
+    stats: { striking: 96, grappling: 98, stamina: 95, chin: 97, heart: 96, fightIQ: 99 }
+  },
+  // Khabib Nurmagomedov
+  {
+    id: "125",
+    name: "KHABIB NURMAGOMEDOV",
+    nickname: "The Eagle",
+    record: { wins: 29, losses: 0, draws: 0 },
+    weightClass: "Lightweight",
+    rank: "Legend",
+    age: 36,
+    height: "5'10\"",
+    reach: "70\"",
+    stance: "Orthodox",
+    nationality: "Russia",
+    imageUrl: undefined,
+    stats: { striking: 87, grappling: 100, stamina: 99, chin: 96, heart: 99, fightIQ: 98 }
+  },
+  // Georges St-Pierre
+  {
+    id: "126",
+    name: "GEORGES ST-PIERRE",
+    nickname: "Rush",
+    record: { wins: 26, losses: 2, draws: 0 },
+    weightClass: "Welterweight",
+    rank: "Legend",
+    age: 43,
+    height: "5'11\"",
+    reach: "76\"",
+    stance: "Orthodox",
+    nationality: "Canada",
+    imageUrl: undefined,
+    stats: { striking: 93, grappling: 98, stamina: 98, chin: 92, heart: 96, fightIQ: 99 }
+  },
+  // Anderson Silva
+  {
+    id: "127",
+    name: "ANDERSON SILVA",
+    nickname: "The Spider",
+    record: { wins: 34, losses: 11, draws: 0 },
+    weightClass: "Middleweight",
+    rank: "Legend",
+    age: 50,
+    height: "6'2\"",
+    reach: "77.5\"",
+    stance: "Southpaw",
+    nationality: "Brazil",
+    imageUrl: undefined,
+    stats: { striking: 99, grappling: 86, stamina: 90, chin: 90, heart: 95, fightIQ: 97 }
+  },
+  // Conor McGregor
+  {
+    id: "128",
+    name: "CONOR MCGREGOR",
+    nickname: "The Notorious",
+    record: { wins: 22, losses: 6, draws: 0 },
+    weightClass: "Lightweight",
+    rank: "Legend",
+    age: 36,
+    height: "5'9\"",
+    reach: "74\"",
+    stance: "Southpaw",
+    nationality: "Ireland",
+    imageUrl: undefined,
+    stats: { striking: 97, grappling: 76, stamina: 84, chin: 85, heart: 90, fightIQ: 92 }
+  },
+  // Jose Aldo
+  {
+    id: "129",
+    name: "JOSE ALDO",
+    nickname: "Junior",
+    record: { wins: 32, losses: 9, draws: 0 },
+    weightClass: "Featherweight",
+    rank: "Legend",
+    age: 38,
+    height: "5'7\"",
+    reach: "70\"",
+    stance: "Orthodox",
+    nationality: "Brazil",
+    imageUrl: undefined,
+    stats: { striking: 93, grappling: 89, stamina: 91, chin: 90, heart: 95, fightIQ: 94 }
+  },
+  // Demetrious Johnson
+  {
+    id: "130",
+    name: "DEMETRIOUS JOHNSON",
+    nickname: "Mighty Mouse",
+    record: { wins: 30, losses: 4, draws: 1 },
+    weightClass: "Flyweight",
+    rank: "Legend",
+    age: 38,
+    height: "5'3\"",
+    reach: "66.5\"",
+    stance: "Orthodox",
+    nationality: "USA",
+    imageUrl: undefined,
+    stats: { striking: 92, grappling: 97, stamina: 99, chin: 91, heart: 97, fightIQ: 99 }
+  },
+  // Daniel Cormier
+  {
+    id: "131",
+    name: "DANIEL CORMIER",
+    nickname: "DC",
+    record: { wins: 22, losses: 3, draws: 0 },
+    weightClass: "Light Heavyweight",
+    rank: "Legend",
+    age: 46,
+    height: "5'11\"",
+    reach: "72\"",
+    stance: "Orthodox",
+    nationality: "USA",
+    imageUrl: undefined,
+    stats: { striking: 88, grappling: 97, stamina: 92, chin: 93, heart: 96, fightIQ: 96 }
+  },
+  // Fedor Emelianenko
+  {
+    id: "132",
+    name: "FEDOR EMELIANENKO",
+    nickname: "The Last Emperor",
+    record: { wins: 40, losses: 7, draws: 0 },
+    weightClass: "Heavyweight",
+    rank: "Legend",
+    age: 48,
+    height: "6'0\"",
+    reach: "76\"",
+    stance: "Orthodox",
+    nationality: "Russia",
+    imageUrl: undefined,
+    stats: { striking: 92, grappling: 96, stamina: 90, chin: 93, heart: 98, fightIQ: 96 }
+  },
+  // Chuck Liddell
+  {
+    id: "133",
+    name: "CHUCK LIDDELL",
+    nickname: "The Iceman",
+    record: { wins: 21, losses: 9, draws: 0 },
+    weightClass: "Light Heavyweight",
+    rank: "Legend",
+    age: 55,
+    height: "6'2\"",
+    reach: "76\"",
+    stance: "Orthodox",
+    nationality: "USA",
+    imageUrl: undefined,
+    stats: { striking: 95, grappling: 80, stamina: 85, chin: 88, heart: 94, fightIQ: 88 }
+  },
+  // BJ Penn
+  {
+    id: "134",
+    name: "BJ PENN",
+    nickname: "The Prodigy",
+    record: { wins: 16, losses: 14, draws: 0 },
+    weightClass: "Lightweight",
+    rank: "Legend",
+    age: 46,
+    height: "5'9\"",
+    reach: "69\"",
+    stance: "Southpaw",
+    nationality: "USA",
+    imageUrl: undefined,
+    stats: { striking: 89, grappling: 95, stamina: 80, chin: 87, heart: 92, fightIQ: 93 }
+  },
+  // Randy Couture
+  {
+    id: "135",
+    name: "RANDY COUTURE",
+    nickname: "The Natural",
+    record: { wins: 19, losses: 11, draws: 0 },
+    weightClass: "Heavyweight",
+    rank: "Legend",
+    age: 62,
+    height: "6'2\"",
+    reach: "78\"",
+    stance: "Orthodox",
+    nationality: "USA",
+    imageUrl: undefined,
+    stats: { striking: 82, grappling: 96, stamina: 92, chin: 94, heart: 98, fightIQ: 97 }
+  },
+  // Wanderlei Silva
+  {
+    id: "136",
+    name: "WANDERLEI SILVA",
+    nickname: "The Axe Murderer",
+    record: { wins: 35, losses: 15, draws: 1 },
+    weightClass: "Light Heavyweight",
+    rank: "Legend",
+    age: 48,
+    height: "5'11\"",
+    reach: "73\"",
+    stance: "Orthodox",
+    nationality: "Brazil",
+    imageUrl: undefined,
+    stats: { striking: 94, grappling: 84, stamina: 90, chin: 86, heart: 98, fightIQ: 87 }
+  },
+  // Tito Ortiz
+  {
+    id: "137",
+    name: "TITO ORTIZ",
+    nickname: "The Huntington Beach Bad Boy",
+    record: { wins: 22, losses: 16, draws: 0 },
+    weightClass: "Light Heavyweight",
+    rank: "Legend",
+    age: 50,
+    height: "6'2\"",
+    reach: "79\"",
+    stance: "Orthodox",
+    nationality: "USA",
+    imageUrl: undefined,
+    stats: { striking: 84, grappling: 90, stamina: 88, chin: 88, heart: 92, fightIQ: 86 }
+  },
+  // Vitor Belfort
+  {
+    id: "138",
+    name: "VITOR BELFORT",
+    nickname: "The Phenom",
+    record: { wins: 26, losses: 14, draws: 0 },
+    weightClass: "Middleweight",
+    rank: "Legend",
+    age: 47,
+    height: "6'1\"",
+    reach: "76\"",
+    stance: "Orthodox",
+    nationality: "Brazil",
+    imageUrl: undefined,
+    stats: { striking: 96, grappling: 85, stamina: 84, chin: 82, heart: 92, fightIQ: 87 }
+  },
+  // Robbie Lawler
+  {
+    id: "139",
+    name: "ROBBIE LAWLER",
+    nickname: "Ruthless",
+    record: { wins: 30, losses: 16, draws: 1 },
+    weightClass: "Welterweight",
+    rank: "Legend",
+    age: 42,
+    height: "5'11\"",
+    reach: "74\"",
+    stance: "Southpaw",
+    nationality: "USA",
+    imageUrl: undefined,
+    stats: { striking: 95, grappling: 80, stamina: 90, chin: 90, heart: 99, fightIQ: 88 }
+  },
+  // Stipe Miocic
+  {
+    id: "140",
+    name: "STIPE MIOCIC",
+    nickname: "The Croatian Sensation",
+    record: { wins: 20, losses: 5, draws: 0 },
+    weightClass: "Heavyweight",
+    rank: "Legend",
+    age: 42,
+    height: "6'4\"",
+    reach: "80\"",
+    stance: "Orthodox",
+    nationality: "USA",
+    imageUrl: undefined,
+    stats: { striking: 90, grappling: 88, stamina: 95, chin: 94, heart: 96, fightIQ: 93 }
+  },
+  // Cain Velasquez
+  {
+    id: "141",
+    name: "CAIN VELASQUEZ",
+    nickname: "The Cain",
+    record: { wins: 14, losses: 3, draws: 0 },
+    weightClass: "Heavyweight",
+    rank: "Legend",
+    age: 42,
+    height: "6'1\"",
+    reach: "77\"",
+    stance: "Orthodox",
+    nationality: "USA",
+    imageUrl: undefined,
+    stats: { striking: 89, grappling: 96, stamina: 99, chin: 90, heart: 98, fightIQ: 93 }
+  },
+  // Junior Dos Santos
+  {
+    id: "142",
+    name: "JUNIOR DOS SANTOS",
+    nickname: "Cigano",
+    record: { wins: 21, losses: 9, draws: 0 },
+    weightClass: "Heavyweight",
+    rank: "Legend",
+    age: 41,
+    height: "6'4\"",
+    reach: "77\"",
+    stance: "Orthodox",
+    nationality: "Brazil",
+    imageUrl: undefined,
+    stats: { striking: 95, grappling: 74, stamina: 88, chin: 88, heart: 92, fightIQ: 88 }
+  },
+  // Lyoto Machida
+  {
+    id: "143",
+    name: "LYOTO MACHIDA",
+    nickname: "The Dragon",
+    record: { wins: 28, losses: 12, draws: 0 },
+    weightClass: "Light Heavyweight",
+    rank: "Legend",
+    age: 46,
+    height: "6'1\"",
+    reach: "75\"",
+    stance: "Karate",
+    nationality: "Brazil",
+    imageUrl: undefined,
+    stats: { striking: 93, grappling: 83, stamina: 88, chin: 90, heart: 90, fightIQ: 96 }
   }
 ];
 

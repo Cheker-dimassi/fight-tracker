@@ -3,7 +3,7 @@ import { ArrowLeft, Trophy, Target, Clock, MapPin, Users, TrendingUp, Award, Ale
 import { Link, useParams } from "react-router-dom";
 import { useFighter, useAllFighters } from "../hooks/useOctagonApi";
 import { useFighterFightHistory, useRealFighterStats } from "../hooks/useUfcData";
-import { transformRankDisplay, isChampion } from "../lib/rankUtils";
+import { transformRankDisplay, isChampion, isLegend } from "../lib/rankUtils";
 import { useFighterImage } from "../hooks/useImage";
 
 export default function FighterProfile() {

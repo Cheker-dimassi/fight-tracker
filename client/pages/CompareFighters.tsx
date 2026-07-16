@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Search, Users, Trophy, Target, TrendingUp, Zap } from "lucide-react";
 import { useAllFighters, useFighterSearch } from "../hooks/useOctagonApi";
 import { AppFighter } from "@shared/octagon-api";
-import { transformRankDisplay, isChampion } from "../lib/rankUtils";
+import { transformRankDisplay, isChampion, isLegend } from "../lib/rankUtils";
 
 export default function CompareFighters() {
   const [selectedFighter1, setSelectedFighter1] = useState<AppFighter | null>(null);
@@ -77,6 +77,8 @@ export default function CompareFighters() {
             <span className={`px-3 py-1 font-oswald font-bold text-sm tracking-widest ${
               isChampion(fighter.rank)
                 ? 'bg-gradient-to-r from-yellow-400 to-yellow-600 text-black'
+                : isLegend(fighter.rank)
+                ? 'bg-gradient-to-r from-amber-700 to-yellow-500 text-white'
                 : 'bg-ufc-red text-white'
             }`}>
               {transformRankDisplay(fighter.rank)}
