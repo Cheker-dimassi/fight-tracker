@@ -4,6 +4,12 @@ export async function postFightCardStatusProxy(req: Request, res: Response) {
   try {
     const url = process.env.ZYLA_CARD_STATUS_API_URL || "https://zylalabs.com/api/5480/ufc+fight+schedule+tracker+api/7104/get+fight+card+status";
     const apiKey = process.env.ZYLA_API_KEY || process.env.ZYLA_CARD_STATUS_API_KEY || "";
+    if (!apiKey) {
+      return res.status(503).json({
+        error: "no_api_key",
+        message: "UFC card status requires a Zyla API key. Configure ZYLA_API_KEY in your .env file."
+      });
+    }
     const keyHeader = process.env.ZYLA_API_KEY_HEADER || process.env.ZYLA_CARD_STATUS_API_KEY_HEADER || "Authorization";
 
     const headers: Record<string, string> = {

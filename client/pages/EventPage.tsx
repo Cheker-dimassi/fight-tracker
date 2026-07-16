@@ -50,13 +50,16 @@ export default function EventPage() {
             </div>
 
             {/* Fight card status */}
-            <div className="fight-card p-4 mb-8 text-center">
+            <div className="fight-card p-4 mb-8 text-center bg-ufc-dark-gray/30 rounded border border-ufc-metallic-dark/40">
               {statusLoading ? (
                 <div className="font-oswald text-ufc-metallic">Checking card status…</div>
               ) : statusError ? (
-                <div className="font-oswald text-ufc-red">{statusError}</div>
+                <div className="font-oswald text-ufc-metallic text-sm">
+                  Card status: <span className="text-ufc-metallic/80">Live status unavailable</span>
+                  <span className="block text-xs text-ufc-metallic/60 mt-1">({statusError})</span>
+                </div>
               ) : (
-                <div className="font-oswald text-ufc-metallic">Card status: <span className="text-white">{cardStatus?.statusText || 'Unknown'}</span></div>
+                <div className="font-oswald text-ufc-metallic">Card status: <span className="text-white font-bold">{cardStatus?.statusText || 'Unknown'}</span></div>
               )}
             </div>
 

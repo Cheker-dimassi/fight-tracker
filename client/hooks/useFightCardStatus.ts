@@ -20,7 +20,16 @@ export function useFightCardStatus(params: { event?: string; date?: string; loca
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(params),
       });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      if (!res.ok) {
+        let msg = `HTTP ${res.status}`;
+        try {
+          const errBody = await res.json();
+          if (errBody?.message) {
+            msg = errBody.message;
+          }
+        } catch {}
+        throw new Error(msg);
+      }
       const json = await res.json();
       const statusText =
         (json && (json.status || json.card_status || json.message || json.statusText)) || undefined;
