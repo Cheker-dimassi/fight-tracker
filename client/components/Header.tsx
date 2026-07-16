@@ -44,14 +44,11 @@ export default function Header() {
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
             <Link to="/" className="flex items-center gap-3 hover:opacity-90 transition-opacity">
-              <div className="flex items-center gap-2 font-oswald">
-                <div className="flex items-center justify-center w-10 h-10 bg-ufc-red text-white font-extrabold text-2xl skew-x-[-12deg] border border-white/20 shadow-md shadow-ufc-red/20">
-                  FT
-                </div>
-                <span className="text-xl font-black tracking-tighter text-white skew-x-[-12deg] hidden sm:inline-block">
-                  FIGHT<span className="text-ufc-red">TRACKER</span>
-                </span>
-              </div>
+              <img
+                src="/logo.png"
+                alt="Fight Tracker"
+                className="h-10 md:h-12 w-auto object-contain"
+              />
             </Link>
 
             {/* Desktop Navigation */}
