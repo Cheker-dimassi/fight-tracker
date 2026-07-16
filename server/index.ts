@@ -7,7 +7,9 @@ import {
   getFighter,
   getRankings,
   getDivision,
-  searchFightersEndpoint
+  searchFightersEndpoint,
+  createCustomFighter,
+  updateFighterOverride
 } from "./routes/octagon";
 import { getUpcomingFightsProxy } from "./routes/upcoming";
 import { postFightCardStatusProxy } from "./routes/fightCard";
@@ -49,6 +51,8 @@ export function createServer() {
   app.get("/api/rankings", getRankings);
   app.get("/api/division/:divisionId", getDivision);
   app.get("/api/search", searchFightersEndpoint);
+  app.post("/api/fighter/custom", createCustomFighter);
+  app.post("/api/fighter/:fighterId/override", updateFighterOverride);
 
   // External upcoming fights proxy
   app.get("/api/upcoming-fights", getUpcomingFightsProxy);

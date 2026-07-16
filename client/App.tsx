@@ -16,6 +16,7 @@ import EventPage from "./pages/EventPage";
 import CompareFighters from "./pages/CompareFighters";
 import Fighters from "./pages/Fighters";
 import SignIn from "./pages/SignIn";
+import Admin from "./pages/Admin";
 
 const queryClient = new QueryClient();
 
@@ -33,6 +34,7 @@ const App = () => (
             <Route path="/events" element={<Events />} />
             <Route path="/event/:id" element={<EventPage />} />
             <Route path="/compare" element={<CompareFighters />} />
+            <Route path="/admin" element={<Admin />} />
             <Route path="/signin" element={<SignIn />} />
             <Route path="/about" element={<PlaceholderPage title="About" description="Learn more about Fight Tracker and our mission to bring you the most comprehensive MMA statistics platform." />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
