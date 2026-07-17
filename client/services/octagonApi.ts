@@ -18,11 +18,11 @@ async function applyCsvOverride(base: AppFighter): Promise<AppFighter> {
       ...base,
       record: { ...base.record, wins: merge.wins, losses: merge.losses, draws: merge.draws },
       weightClass: merge.weightClass || base.weightClass,
-      height: merge.height || base.height,
-      reach: merge.reach || base.reach,
-      stance: merge.stance || base.stance,
+      height: merge.height ?? base.height,
+      reach: merge.reach ?? base.reach,
+      stance: merge.stance ?? base.stance,
       age: merge.age ?? base.age,
-      stats: base.stats && Object.keys(base.stats).length > 0 ? base.stats : merge.stats,
+      stats: merge.stats,
     };
   } catch {
     return base;

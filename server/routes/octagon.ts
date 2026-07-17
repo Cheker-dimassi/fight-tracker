@@ -76,11 +76,11 @@ async function applyCsvOverride(base: AppFighter): Promise<AppFighter> {
         ...fighter,
         record: { ...fighter.record, wins: merge.wins, losses: merge.losses, draws: merge.draws },
         weightClass: merge.weightClass || fighter.weightClass,
-        height: merge.height || fighter.height,
-        reach: merge.reach || fighter.reach,
-        stance: merge.stance || fighter.stance,
+        height: merge.height ?? fighter.height,
+        reach: merge.reach ?? fighter.reach,
+        stance: merge.stance ?? fighter.stance,
         age: merge.age ?? fighter.age,
-        stats: base.stats && Object.keys(base.stats).length > 0 ? base.stats : merge.stats,
+        stats: merge.stats,
       };
     }
   } catch {}

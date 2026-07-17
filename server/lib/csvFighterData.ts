@@ -28,6 +28,59 @@ let _fightHistory: UfcFightRecord[] | null = null;
 let _fighterStats: UfcFighterRecord[] | null = null;
 let _fighterStatsByName: Map<string, UfcFighterRecord> | null = null;
 
+interface ColumnStats {
+  mean: number;
+  stdDev: number;
+}
+
+let _statsDistributions: Record<string, ColumnStats> = {};
+
+function pctToNumber(v: string | undefined): number | null {
+  if (!v) return null;
+  const n = parseFloat(v.replace("%", ""));
+  return isNaN(n) ? null : n;
+}
+
+function calculateDistributions() {
+  if (!_fighterStats) return;
+
+  const columns = ['SLpM', 'Str_Acc', 'SApM', 'Str_Def', 'TD_Avg', 'TD_Acc', 'TD_Def', 'Sub_Avg'];
+  const parsedValues: Record<string, number[]> = {};
+  
+  for (const col of columns) {
+    parsedValues[col] = [];
+  }
+
+  for (const f of _fighterStats) {
+    const wins = parseInt(f.Wins) || 0;
+    const losses = parseInt(f.Losses) || 0;
+    const total = wins + losses;
+    if (total < 2) continue; // Skip debutants
+
+    for (const col of columns) {
+      let val = 0;
+      if (col.endsWith('_Acc') || col.endsWith('_Def')) {
+        val = pctToNumber(f[col as keyof UfcFighterRecord]) ?? 0;
+      } else {
+        val = parseFloat(f[col as keyof UfcFighterRecord] || '0') || 0;
+      }
+      parsedValues[col].push(val);
+    }
+  }
+
+  for (const col of columns) {
+    const vals = parsedValues[col];
+    if (vals.length === 0) {
+      _statsDistributions[col] = { mean: 0, stdDev: 1 };
+      continue;
+    }
+    const mean = vals.reduce((sum, v) => sum + v, 0) / vals.length;
+    const variance = vals.reduce((sum, v) => sum + Math.pow(v - mean, 2), 0) / vals.length;
+    const stdDev = Math.sqrt(variance);
+    _statsDistributions[col] = { mean, stdDev: stdDev || 1 };
+  }
+}
+
 async function loadCsvData() {
   if (_fightHistory && _fighterStats && _fighterStatsByName) return;
 
@@ -43,6 +96,8 @@ async function loadCsvData() {
   for (const r of _fighterStats) {
     _fighterStatsByName.set(r.Fighter_Name.trim().toLowerCase(), r);
   }
+
+  calculateDistributions();
 }
 
 function parseIntSafe(v: string | undefined): number {
@@ -50,14 +105,19 @@ function parseIntSafe(v: string | undefined): number {
   return isNaN(n) ? 0 : n;
 }
 
-function pctToNumber(v: string | undefined): number | null {
-  if (!v) return null;
-  const n = parseFloat(v.replace("%", ""));
-  return isNaN(n) ? null : n;
-}
-
 function clamp(n: number, min = 0, max = 100): number {
   return Math.max(min, Math.min(max, Math.round(n)));
+}
+
+function getNormalizedScore(col: string, val: number, invert = false): number {
+  const stats = _statsDistributions[col];
+  if (!stats) return 75; // Default average
+  
+  let z = (val - stats.mean) / stats.stdDev;
+  if (invert) z = -z;
+  
+  const clampedZ = Math.max(-2, Math.min(2.2, z));
+  return Math.max(50, Math.min(100, Math.round(78 + clampedZ * 10)));
 }
 
 export function deriveRealStats(
@@ -78,18 +138,36 @@ export function deriveRealStats(
     };
   }
 
-  const strAcc = pctToNumber(stats.Str_Acc) ?? 45;
-  const strDef = pctToNumber(stats.Str_Def) ?? 50;
-  const tdAcc = pctToNumber(stats.TD_Acc) ?? 35;
-  const tdDef = pctToNumber(stats.TD_Def) ?? 50;
+  const slpmVal = parseFloat(stats.SLpM || '0');
+  const strAccVal = pctToNumber(stats.Str_Acc) ?? 45;
+  const sapmVal = parseFloat(stats.SApM || '0');
+  const strDefVal = pctToNumber(stats.Str_Def) ?? 50;
+  const tdAvgVal = parseFloat(stats.TD_Avg || '0');
+  const tdAccVal = pctToNumber(stats.TD_Acc) ?? 35;
+  const tdDefVal = pctToNumber(stats.TD_Def) ?? 50;
+
+  const slpmScore = getNormalizedScore('SLpM', slpmVal);
+  const strAccScore = getNormalizedScore('Str_Acc', strAccVal);
+  const sapmScore = getNormalizedScore('SApM', sapmVal, true);
+  const strDefScore = getNormalizedScore('Str_Def', strDefVal);
+  const tdAvgScore = getNormalizedScore('TD_Avg', tdAvgVal);
+  const tdAccScore = getNormalizedScore('TD_Acc', tdAccVal);
+  const tdDefScore = getNormalizedScore('TD_Def', tdDefVal);
+
+  const striking = clamp((slpmScore * 0.4) + (strAccScore * 0.6));
+  const grappling = clamp((tdAvgScore * 0.3) + (tdAccScore * 0.3) + (tdDefScore * 0.4));
+  const stamina = clamp(75 + Math.min(totalFights, 15) * 1.0 + (winRate - 0.5) * 10);
+  const chin = clamp((strDefScore * 0.6) + (sapmScore * 0.4));
+  const heart = clamp(70 + (winRate * 20) + Math.min(totalFights, 15) * 0.8);
+  const fightIQ = clamp(70 + (winRate * 15) + ((strDefScore + tdDefScore) / 2 - 75) * 0.4);
 
   return {
-    striking: clamp(65 + (strAcc - 42) * 1.5),
-    grappling: clamp(65 + (((tdAcc * 1.2) + tdDef) / 2 - 45) * 1.3),
-    stamina: clamp(75 + Math.min(totalFights, 18)),
-    chin: clamp(70 + (strDef - 55) * 1.6),
-    heart: clamp(65 + winRate * 25 + Math.min(totalFights, 10)),
-    fightIQ: clamp(70 + winRate * 15 + Math.min(totalFights, 10)),
+    striking,
+    grappling,
+    stamina,
+    chin,
+    heart,
+    fightIQ,
   };
 }
 

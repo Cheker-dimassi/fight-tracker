@@ -2191,14 +2191,14 @@ export const fallbackFighters: AppFighter[] = [
 
 // Helper functions for filtering and searching
 export function getFightersByWeightClass(weightClass: string): AppFighter[] {
-  return fallbackFighters.filter(fighter => 
+  return fallbackFighters.filter(fighter =>
     fighter.weightClass.toLowerCase().includes(weightClass.toLowerCase())
   );
 }
 
 export function searchFighters(query: string): AppFighter[] {
   const searchTerm = query.toLowerCase();
-  return fallbackFighters.filter(fighter => 
+  return fallbackFighters.filter(fighter =>
     fighter.name.toLowerCase().includes(searchTerm) ||
     (fighter.nickname && fighter.nickname.toLowerCase().includes(searchTerm)) ||
     fighter.weightClass.toLowerCase().includes(searchTerm) ||

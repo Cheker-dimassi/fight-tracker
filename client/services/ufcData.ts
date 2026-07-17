@@ -97,10 +97,64 @@ export async function getFightHistory(): Promise<UfcFightRecord[]> {
   return _fightHistory;
 }
 
+interface ColumnStats {
+  mean: number;
+  stdDev: number;
+}
+
+let _statsDistributions: Record<string, ColumnStats> = {};
+
+function pctToNumber(v: string | undefined): number | null {
+  if (!v) return null;
+  const n = parseFloat(v.replace("%", ""));
+  return isNaN(n) ? null : n;
+}
+
+function calculateDistributions() {
+  if (!_fighterStats) return;
+
+  const columns = ['SLpM', 'Str_Acc', 'SApM', 'Str_Def', 'TD_Avg', 'TD_Acc', 'TD_Def', 'Sub_Avg'];
+  const parsedValues: Record<string, number[]> = {};
+  
+  for (const col of columns) {
+    parsedValues[col] = [];
+  }
+
+  for (const f of _fighterStats) {
+    const wins = parseInt(f.Wins) || 0;
+    const losses = parseInt(f.Losses) || 0;
+    const total = wins + losses;
+    if (total < 2) continue; // Skip debutants
+
+    for (const col of columns) {
+      let val = 0;
+      if (col.endsWith('_Acc') || col.endsWith('_Def')) {
+        val = pctToNumber(f[col as keyof UfcFighterRecord]) ?? 0;
+      } else {
+        val = parseFloat(f[col as keyof UfcFighterRecord] || '0') || 0;
+      }
+      parsedValues[col].push(val);
+    }
+  }
+
+  for (const col of columns) {
+    const vals = parsedValues[col];
+    if (vals.length === 0) {
+      _statsDistributions[col] = { mean: 0, stdDev: 1 };
+      continue;
+    }
+    const mean = vals.reduce((sum, v) => sum + v, 0) / vals.length;
+    const variance = vals.reduce((sum, v) => sum + Math.pow(v - mean, 2), 0) / vals.length;
+    const stdDev = Math.sqrt(variance);
+    _statsDistributions[col] = { mean, stdDev: stdDev || 1 };
+  }
+}
+
 export async function getFighterStatsList(): Promise<UfcFighterRecord[]> {
   if (_fighterStats) return _fighterStats;
   const rows = await fetchLocalCsv("ufc_fighter_stats.csv");
   _fighterStats = rows as unknown as UfcFighterRecord[];
+  calculateDistributions();
   return _fighterStats;
 }
 
@@ -133,23 +187,21 @@ export async function getFighterStatsByFighterName(
 
 // -- Helpers for turning raw dataset numbers into display-friendly values --
 
-function pctToNumber(v: string | undefined): number | null {
-  if (!v) return null;
-  const n = parseFloat(v.replace("%", ""));
-  return isNaN(n) ? null : n;
-}
-
 function clamp(n: number, min = 0, max = 100): number {
   return Math.max(min, Math.min(max, Math.round(n)));
 }
 
-/**
- * Derives 0-100 "stat bar" values from a fighter's real career numbers.
- * The UFC doesn't publish official 0-100 ratings for things like "heart" or
- * "chin", so this is a documented heuristic built from real per-fighter
- * numbers (striking/TD accuracy & defense, win rate) instead of random noise.
- * It's deterministic: the same fighter always produces the same numbers.
- */
+function getNormalizedScore(col: string, val: number, invert = false): number {
+  const stats = _statsDistributions[col];
+  if (!stats) return 75; // Default average
+  
+  let z = (val - stats.mean) / stats.stdDev;
+  if (invert) z = -z;
+  
+  const clampedZ = Math.max(-2, Math.min(2.2, z));
+  return Math.max(50, Math.min(100, Math.round(78 + clampedZ * 10)));
+}
+
 export function deriveRealStats(
   stats: UfcFighterRecord | null,
   record: { wins: number; losses: number; draws: number },
@@ -168,18 +220,36 @@ export function deriveRealStats(
     };
   }
 
-  const strAcc = pctToNumber(stats.Str_Acc) ?? 45;
-  const strDef = pctToNumber(stats.Str_Def) ?? 50;
-  const tdAcc = pctToNumber(stats.TD_Acc) ?? 35;
-  const tdDef = pctToNumber(stats.TD_Def) ?? 50;
+  const slpmVal = parseFloat(stats.SLpM || '0');
+  const strAccVal = pctToNumber(stats.Str_Acc) ?? 45;
+  const sapmVal = parseFloat(stats.SApM || '0');
+  const strDefVal = pctToNumber(stats.Str_Def) ?? 50;
+  const tdAvgVal = parseFloat(stats.TD_Avg || '0');
+  const tdAccVal = pctToNumber(stats.TD_Acc) ?? 35;
+  const tdDefVal = pctToNumber(stats.TD_Def) ?? 50;
+
+  const slpmScore = getNormalizedScore('SLpM', slpmVal);
+  const strAccScore = getNormalizedScore('Str_Acc', strAccVal);
+  const sapmScore = getNormalizedScore('SApM', sapmVal, true);
+  const strDefScore = getNormalizedScore('Str_Def', strDefVal);
+  const tdAvgScore = getNormalizedScore('TD_Avg', tdAvgVal);
+  const tdAccScore = getNormalizedScore('TD_Acc', tdAccVal);
+  const tdDefScore = getNormalizedScore('TD_Def', tdDefVal);
+
+  const striking = clamp((slpmScore * 0.4) + (strAccScore * 0.6));
+  const grappling = clamp((tdAvgScore * 0.3) + (tdAccScore * 0.3) + (tdDefScore * 0.4));
+  const stamina = clamp(75 + Math.min(totalFights, 15) * 1.0 + (winRate - 0.5) * 10);
+  const chin = clamp((strDefScore * 0.6) + (sapmScore * 0.4));
+  const heart = clamp(70 + (winRate * 20) + Math.min(totalFights, 15) * 0.8);
+  const fightIQ = clamp(70 + (winRate * 15) + ((strDefScore + tdDefScore) / 2 - 75) * 0.4);
 
   return {
-    striking: clamp(65 + (strAcc - 42) * 1.5),
-    grappling: clamp(65 + (((tdAcc * 1.2) + tdDef) / 2 - 45) * 1.3),
-    stamina: clamp(75 + Math.min(totalFights, 18)),
-    chin: clamp(70 + (strDef - 55) * 1.6),
-    heart: clamp(65 + winRate * 25 + Math.min(totalFights, 10)),
-    fightIQ: clamp(70 + winRate * 15 + Math.min(totalFights, 10)),
+    striking,
+    grappling,
+    stamina,
+    chin,
+    heart,
+    fightIQ,
   };
 }
 
@@ -332,6 +402,100 @@ export interface CsvFighterMerge {
   stats: RealFighterStats;
 }
 
+// -- Live record freshness --
+// Greco1899/scrape_ufc_stats runs a daily automated scrape of ufcstats.com and
+// pushes refreshed CSVs to GitHub. We only rely on the two files whose schema
+// we're certain of (they match your original stub files' columns exactly),
+// to compute a fighter's CURRENT win/loss/draw record — the thing that goes
+// stale the moment a fight happens. Height/reach/stance/striking stats still
+// come from the bundled snapshot; going further would mean guessing at an
+// unverified schema, which is exactly the kind of assumption that caused the
+// earlier silent stat-corruption bug.
+const LIVE_BASE = "https://raw.githubusercontent.com/Greco1899/scrape_ufc_stats/main";
+const LIVE_TTL_MS = 12 * 60 * 60 * 1000; // 12 hours
+
+let _liveFightResults: { rows: Record<string, string>[]; fetchedAt: number } | null = null;
+
+async function getLiveFightResults(): Promise<Record<string, string>[] | null> {
+  if (_liveFightResults && Date.now() - _liveFightResults.fetchedAt < LIVE_TTL_MS) {
+    return _liveFightResults.rows;
+  }
+  try {
+    const res = await fetch(`${LIVE_BASE}/ufc_fight_results.csv`, { cache: "no-store" });
+    if (!res.ok) return null;
+    const text = await res.text();
+    const rows = parseCsv(text);
+    // Defensive schema check: if the columns we depend on aren't there, bail
+    // out cleanly instead of silently misreading the data.
+    const headers = rows.length ? Object.keys(rows[0]) : [];
+    if (!headers.includes("BOUT") || !headers.includes("OUTCOME")) {
+      console.warn(
+        "Greco1899 ufc_fight_results.csv schema looks different than expected " +
+          `(got columns: ${headers.join(", ")}). Skipping live record, using local snapshot instead.`,
+      );
+      return null;
+    }
+    _liveFightResults = { rows, fetchedAt: Date.now() };
+    return rows;
+  } catch {
+    return null; // network error, CORS, offline, etc. — fall back silently
+  }
+}
+
+/** "Fighter A vs. Fighter B" -> ["Fighter A", "Fighter B"], or null if the format doesn't match */
+function parseBout(bout: string): [string, string] | null {
+  const parts = bout.split(/\s+vs\.?\s+/i);
+  if (parts.length !== 2) return null;
+  return [parts[0].trim(), parts[1].trim()];
+}
+
+/** "W/L" -> ["W","L"], or null if the format doesn't match */
+function parseOutcome(outcome: string): [string, string] | null {
+  const parts = outcome.trim().split("/");
+  if (parts.length !== 2) return null;
+  return [parts[0].trim().toUpperCase(), parts[1].trim().toUpperCase()];
+}
+
+export interface LiveRecord {
+  wins: number;
+  losses: number;
+  draws: number;
+  fightsCounted: number;
+}
+
+/**
+ * Computes a fighter's current W/L/D by counting rows in the live,
+ * daily-refreshed ufc_fight_results.csv. Returns null if live data is
+ * unavailable or the fighter isn't found there (callers should fall back to
+ * the local snapshot in either case).
+ */
+export async function getLiveRecordForFighter(name: string): Promise<LiveRecord | null> {
+  const rows = await getLiveFightResults();
+  if (!rows) return null;
+
+  const key = name.trim().toLowerCase();
+  let wins = 0, losses = 0, draws = 0, fightsCounted = 0;
+
+  for (const row of rows) {
+    const names = parseBout(row.BOUT || "");
+    const codes = parseOutcome(row.OUTCOME || "");
+    if (!names || !codes) continue; // unparseable row — skip rather than guess
+
+    const idx = names.findIndex((n) => n.toLowerCase() === key);
+    if (idx === -1) continue;
+
+    const code = codes[idx];
+    fightsCounted++;
+    if (code === "W") wins++;
+    else if (code === "L") losses++;
+    else if (code === "D") draws++;
+    // NC (no contest) and anything else: counted in fightsCounted but not W/L/D
+  }
+
+  if (fightsCounted === 0) return null; // fighter not found in the live file
+  return { wins, losses, draws, fightsCounted };
+}
+
 /**
  * The single place that decides what "real" fighter data looks like for a
  * given name. Returns null if the fighter isn't in the CSV dataset at all,
@@ -341,9 +505,17 @@ export async function getCsvFighterMerge(name: string): Promise<CsvFighterMerge 
   const row = await getFighterStatsByFighterName(name);
   if (!row) return null;
 
-  const wins = parseIntSafe(row.Wins);
-  const losses = parseIntSafe(row.Losses);
-  const draws = parseIntSafe(row.Draws);
+  const snapshotWins = parseIntSafe(row.Wins);
+  const snapshotLosses = parseIntSafe(row.Losses);
+  const snapshotDraws = parseIntSafe(row.Draws);
+
+  // Prefer the live, daily-refreshed record when we can get one — this is
+  // what keeps a fighter's record current within a day of their last fight,
+  // instead of only as current as whenever this snapshot was last replaced.
+  const live = await getLiveRecordForFighter(name);
+  const wins = live ? live.wins : snapshotWins;
+  const losses = live ? live.losses : snapshotLosses;
+  const draws = live ? live.draws : snapshotDraws;
 
   const [stats, weightClass] = await Promise.all([
     Promise.resolve(deriveRealStats(row, { wins, losses, draws })),
