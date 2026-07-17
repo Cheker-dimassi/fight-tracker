@@ -33,7 +33,8 @@ export async function postFightCardStatusProxy(req: Request, res: Response) {
     const contentType = upstream.headers.get("content-type") || "application/json";
 
     if (!upstream.ok) {
-      return res.status(upstream.status).json({ error: `Upstream ${upstream.status} ${upstream.statusText}`, body: text });
+      const status = upstream.status === 401 ? 502 : upstream.status;
+      return res.status(status).json({ error: `Upstream ${upstream.status} ${upstream.statusText}`, body: text });
     }
 
     if (contentType.includes("application/json")) {
