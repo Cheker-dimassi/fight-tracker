@@ -1,0 +1,67 @@
+{
+  "ufc-fight-night-july-18-2026": {
+    "status": "Scheduled",
+    "bouts": [
+      { "segment": "Main Card", "fighter1": "Dricus Du Plessis", "fighter2": "Kamaru Usman", "weightClass": "Middleweight", "mainEvent": true },
+      { "segment": "Main Card", "fighter1": "Jared Cannonier", "fighter2": "Christian Leroy Duncan", "weightClass": "Middleweight" },
+      { "segment": "Main Card", "fighter1": "Chase Hooper", "fighter2": "Mitch Ramirez", "weightClass": "Catchweight (158 lbs)" },
+      { "segment": "Main Card", "fighter1": "Tabatha Ricci", "fighter2": "Fatima Kline", "weightClass": "Women's Strawweight" },
+      { "segment": "Main Card", "fighter1": "Tommy McMillen", "fighter2": "Alberto Montes", "weightClass": "Featherweight" },
+      { "segment": "Prelims", "fighter1": "Austin Bashi", "fighter2": "Jose Miguel Delgado", "weightClass": "Featherweight" },
+      { "segment": "Prelims", "fighter1": "Jean-Paul Lebosnoyani", "fighter2": "Seokhyeon Ko", "weightClass": "Welterweight" },
+      { "segment": "Prelims", "fighter1": "Levi Rodrigues Jr.", "fighter2": "Felipe Franco", "weightClass": "Light Heavyweight" },
+      { "segment": "Prelims", "fighter1": "Ezra Elliott", "fighter2": "Damien Anderson", "weightClass": "Catchweight (148 lbs)" },
+      { "segment": "Prelims", "fighter1": "Alden Coria", "fighter2": "Stewart Nicoll", "weightClass": "Flyweight" },
+      { "segment": "Prelims", "fighter1": "RJ Harris", "fighter2": "Alvin Hines", "weightClass": "Heavyweight" },
+      { "segment": "Prelims", "fighter1": "Anna Melisano", "fighter2": "Dione Barbosa", "weightClass": "Women's Flyweight" }
+    ]
+  },
+  "ufc-fight-night-july-25-2026": {
+    "status": "Scheduled",
+    "bouts": [
+      { "segment": "Main Card", "fighter1": "Magomed Ankalaev", "fighter2": "Azamat Guskov", "weightClass": "Light Heavyweight", "mainEvent": true },
+      { "segment": "Main Card", "fighter1": "Shavkat Rakhmonov", "fighter2": "Carlos Leal", "weightClass": "Welterweight" },
+      { "segment": "Main Card", "fighter1": "Sergei Pavlovich", "fighter2": "Waldo Cortes-Acosta", "weightClass": "Heavyweight" }
+    ]
+  },
+  "ufc-fight-night-august-01-2026": {
+    "status": "Scheduled",
+    "bouts": [
+      { "segment": "Main Card", "fighter1": "Dan Ige", "fighter2": "Patricio Pitbull", "weightClass": "Featherweight", "mainEvent": true },
+      { "segment": "Main Card", "fighter1": "Nikola Medic", "fighter2": "Ricardo Rodriguez", "weightClass": "Middleweight" }
+    ]
+  },
+  "ufc-fight-night-august-08-2026": {
+    "status": "Scheduled",
+    "bouts": [
+      { "segment": "Main Card", "fighter1": "Mateusz Gamrot", "fighter2": "Quillan Salkilld", "weightClass": "Lightweight", "mainEvent": true }
+    ]
+  },
+  "ufc-330": {
+    "status": "Scheduled",
+    "bouts": [
+      { "segment": "Main Card", "fighter1": "Islam Makhachev", "fighter2": "Ian Machado Garry", "weightClass": "Welterweight", "mainEvent": true, "titleFight": true },
+      { "segment": "Main Card", "fighter1": "Sean O'Malley", "fighter2": "Petr Yan", "weightClass": "Bantamweight" },
+      { "segment": "Main Card", "fighter1": "Kayla Harrison", "fighter2": "Julianna Peña", "weightClass": "Women's Bantamweight", "titleFight": true }
+    ]
+  },
+  "ufc-fight-night-august-22-2026": {
+    "status": "Scheduled",
+    "bouts": [
+      { "segment": "Main Card", "fighter1": "Anthony Hernandez", "fighter2": "Gregory Rodrigues", "weightClass": "Middleweight", "mainEvent": true },
+      { "segment": "Main Card", "fighter1": "Roman Dolidze", "fighter2": "Reinier de Ridder", "weightClass": "Light Heavyweight" }
+    ]
+  },
+  "ufc-fight-night-august-29-2026": {
+    "status": "Scheduled",
+    "bouts": [
+      { "segment": "Main Card", "fighter1": "Umar Nurmagomedov", "fighter2": "Song Yadong", "weightClass": "Bantamweight", "mainEvent": true }
+    ]
+  },
+  "ufc-fight-night-september-05-2026": {
+    "status": "Scheduled",
+    "bouts": [
+      { "segment": "Main Card", "fighter1": "TBD", "fighter2": "TBD", "weightClass": "TBD", "mainEvent": true }
+    ]
+  }
+}

@@ -3,12 +3,27 @@ import { Calendar, Clock, MapPin, ArrowLeft, DollarSign, Ticket, Users, Trophy }
 import { useUfcEvent } from "../hooks/useUfcData";
 import { useFightCardStatus } from "../hooks/useFightCardStatus";
 import { useEventPoster } from "../hooks/useImage";
+import { useScheduledEvent, type ScheduledBout } from "../hooks/useScheduledEvent";
 import { LIVE_STREAM_URL } from "@/lib/streamLinks";
 
 export default function EventPage() {
   const { id } = useParams();
-  const { data: event, fights, loading, error } = useUfcEvent(id || null);
-  const { data: cardStatus, loading: statusLoading, error: statusError } = useFightCardStatus(event ? { event: event.EVENT, date: event.DATE, location: event.LOCATION } : null);
+  const { data: scheduled, loading: scheduledLoading } = useScheduledEvent(id || null);
+  const isScheduled = !!scheduled;
+  const { data: csvEvent, fights: csvFights, loading: csvLoading, error: csvError } = useUfcEvent(
+    isScheduled ? null : id || null,
+  );
+  const { data: cardStatus, loading: statusLoading, error: statusError } = useFightCardStatus(
+    !isScheduled && csvEvent ? { event: csvEvent.EVENT, date: csvEvent.DATE, location: csvEvent.LOCATION } : null,
+  );
+
+  const event = scheduled
+    ? { EVENT: scheduled.EVENT, DATE: scheduled.DATE, LOCATION: scheduled.LOCATION }
+    : csvEvent;
+  const loading = scheduledLoading || (!isScheduled && csvLoading);
+  const error = !isScheduled ? csvError : null;
+  const scheduledBouts = scheduled?.bouts ?? [];
+  const boutSegments = groupBouts(scheduledBouts);
 
   return (
     <div className="min-h-screen bg-ufc-black">
@@ -39,7 +54,6 @@ export default function EventPage() {
 
         {event && (
           <>
-            {/* Poster */}
             <EventPoster title={event.EVENT} />
 
             <div className="text-center mb-16">
@@ -50,44 +64,71 @@ export default function EventPage() {
               </div>
             </div>
 
-            {/* Fight card status */}
             <div className="fight-card p-4 mb-8 text-center bg-ufc-dark-gray/30 rounded border border-ufc-metallic-dark/40">
-              {statusLoading ? (
+              {isScheduled ? (
+                <div className="font-oswald text-ufc-metallic">
+                  Card status: <span className="text-white font-bold">{scheduled?.status || "Scheduled"}</span>
+                </div>
+              ) : statusLoading ? (
                 <div className="font-oswald text-ufc-metallic">Checking card status…</div>
               ) : statusError ? (
                 <div className="font-oswald text-ufc-metallic text-sm">
-                  Card status: <span className="text-ufc-metallic/80">Live status unavailable</span>
-                  <span className="block text-xs text-ufc-metallic/60 mt-1">({statusError})</span>
+                  Card status: <span className="text-white font-bold">Completed</span>
                 </div>
               ) : (
-                <div className="font-oswald text-ufc-metallic">Card status: <span className="text-white font-bold">{cardStatus?.statusText || 'Unknown'}</span></div>
+                <div className="font-oswald text-ufc-metallic">
+                  Card status: <span className="text-white font-bold">{cardStatus?.statusText || "Completed"}</span>
+                </div>
               )}
             </div>
 
-            <div className="space-y-6">
-              {fights.map((f, idx) => (
-                <div key={`${f.Fight_URL || idx}`} className="fight-card ufc-glow p-6">
-                  <div className="text-center mb-4">
-                    <h3 className="font-anton text-2xl text-white tracking-wider">
-                      {f.Fighter_1} vs. {f.Fighter_2}
-                    </h3>
-                    <p className="font-oswald text-ufc-metallic mt-2">
-                      {f.Weight_Class} • {f.Method} • R{f.End_Round} {f.End_Time}
-                    </p>
-                  </div>
-                  <div className="grid sm:grid-cols-2 gap-4 font-oswald text-sm text-ufc-metallic">
-                    <div>Winner: <span className="text-white">{f.Winner || "N/A"}</span></div>
-                    <div>Sig. Strikes: <span className="text-white">{f.F1_Sig_Landed}/{f.F1_Sig_Att} vs {f.F2_Sig_Landed}/{f.F2_Sig_Att}</span></div>
-                  </div>
+            {isScheduled ? (
+              scheduledBouts.length > 0 ? (
+                <div className="space-y-10">
+                  {boutSegments.map((segment) => (
+                    <section key={segment.name}>
+                      <h2 className="font-anton text-3xl text-white mb-6 tracking-wider text-center">
+                        {segment.name.toUpperCase()}
+                      </h2>
+                      <div className="space-y-4">
+                        {segment.bouts.map((bout, idx) => (
+                          <ScheduledBoutCard key={`${segment.name}-${idx}`} bout={bout} />
+                        ))}
+                      </div>
+                    </section>
+                  ))}
                 </div>
-              ))}
-            </div>
+              ) : (
+                <div className="fight-card p-8 text-center">
+                  <p className="font-oswald text-ufc-metallic tracking-wide">Fight card to be announced.</p>
+                </div>
+              )
+            ) : (
+              <div className="space-y-6">
+                {csvFights.map((f, idx) => (
+                  <div key={`${f.Fight_URL || idx}`} className="fight-card ufc-glow p-6">
+                    <div className="text-center mb-4">
+                      <h3 className="font-anton text-2xl text-white tracking-wider">
+                        {f.Fighter_1} vs. {f.Fighter_2}
+                      </h3>
+                      <p className="font-oswald text-ufc-metallic mt-2">
+                        {f.Weight_Class} • {f.Method} • R{f.End_Round} {f.End_Time}
+                      </p>
+                    </div>
+                    <div className="grid sm:grid-cols-2 gap-4 font-oswald text-sm text-ufc-metallic">
+                      <div>Winner: <span className="text-white">{f.Winner || "N/A"}</span></div>
+                      <div>Sig. Strikes: <span className="text-white">{f.F1_Sig_Landed}/{f.F1_Sig_Att} vs {f.F2_Sig_Landed}/{f.F2_Sig_Att}</span></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
 
             <div className="grid md:grid-cols-3 gap-6 mt-16">
               {[
-                { icon: Users, value: String(fights.length || 0), label: "FIGHTS ON CARD" },
-                { icon: Trophy, value: `${Math.max(0, fights.filter(f => (f.Weight_Class || '').toLowerCase().includes('title')).length)}`, label: "TITLE FIGHTS" },
-                { icon: Clock, value: "—", label: "DURATION" }
+                { icon: Users, value: String(isScheduled ? scheduledBouts.length : csvFights.length || 0), label: "FIGHTS ON CARD" },
+                { icon: Trophy, value: `${Math.max(0, (isScheduled ? scheduledBouts : csvFights).filter((f: any) => (f.titleFight || (f.Weight_Class || '').toLowerCase().includes('title'))).length)}`, label: "TITLE FIGHTS" },
+                { icon: Clock, value: isScheduled ? "Upcoming" : "Completed", label: "STATUS" }
               ].map((stat, index) => {
                 const Icon = stat.icon as any;
                 return (
@@ -125,6 +166,46 @@ export default function EventPage() {
       </div>
     </div>
   );
+}
+
+function ScheduledBoutCard({ bout }: { bout: ScheduledBout }) {
+  return (
+    <div className={`fight-card ufc-glow p-6 ${bout.mainEvent ? "border-ufc-red/60" : ""}`}>
+      {bout.mainEvent && (
+        <div className="text-center mb-4">
+          <span className="px-4 py-1 bg-ufc-red text-white font-oswald font-bold text-xs tracking-widest">MAIN EVENT</span>
+        </div>
+      )}
+      <div className="grid md:grid-cols-[1fr_auto_1fr] gap-4 items-center text-center">
+        <div>
+          <p className="font-anton text-2xl text-white tracking-wider">{bout.fighter1}</p>
+        </div>
+        <div className="font-oswald text-ufc-red font-bold text-xl tracking-widest">VS</div>
+        <div>
+          <p className="font-anton text-2xl text-white tracking-wider">{bout.fighter2}</p>
+        </div>
+      </div>
+      <p className="font-oswald text-ufc-metallic text-center mt-4 tracking-wide">
+        {bout.weightClass}
+        {bout.titleFight ? " • Title Fight" : ""}
+      </p>
+    </div>
+  );
+}
+
+function groupBouts(bouts: ScheduledBout[]) {
+  const order = ["Main Card", "Prelims", "Early Prelims"];
+  const grouped = new Map<string, ScheduledBout[]>();
+
+  for (const bout of bouts) {
+    const list = grouped.get(bout.segment) ?? [];
+    list.push(bout);
+    grouped.set(bout.segment, list);
+  }
+
+  return order
+    .filter((name) => grouped.has(name))
+    .map((name) => ({ name, bouts: grouped.get(name)! }));
 }
 
 function EventPoster({ title }: { title: string }) {

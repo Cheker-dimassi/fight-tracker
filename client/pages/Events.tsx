@@ -1,21 +1,35 @@
 import { useUfcEvents } from "../hooks/useUfcData";
+import { useScheduledEvents } from "../hooks/useScheduledEvent";
 import { Calendar, MapPin, Search } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useMemo, useState } from "react";
 import { useEventPoster } from "../hooks/useImage";
 
 export default function Events() {
-  const { data, loading, error } = useUfcEvents();
+  const { data: pastEvents, loading: pastLoading, error: pastError } = useUfcEvents();
+  const { data: upcomingEvents, loading: upcomingLoading, error: upcomingError } = useScheduledEvents();
   const [q, setQ] = useState("");
 
-  const filtered = useMemo(() => {
+  const loading = pastLoading || upcomingLoading;
+  const error = pastError || upcomingError;
+
+  const filteredUpcoming = useMemo(() => {
     const s = q.trim().toLowerCase();
-    if (!s) return data;
-    return data.filter(e =>
+    if (!s) return upcomingEvents;
+    return upcomingEvents.filter((e) =>
       e.EVENT.toLowerCase().includes(s) ||
-      e.LOCATION.toLowerCase().includes(s)
+      e.LOCATION.toLowerCase().includes(s),
     );
-  }, [q, data]);
+  }, [q, upcomingEvents]);
+
+  const filteredPast = useMemo(() => {
+    const s = q.trim().toLowerCase();
+    if (!s) return pastEvents;
+    return pastEvents.filter((e) =>
+      e.EVENT.toLowerCase().includes(s) ||
+      e.LOCATION.toLowerCase().includes(s),
+    );
+  }, [q, pastEvents]);
 
   return (
     <div className="min-h-screen bg-ufc-black">
@@ -43,18 +57,57 @@ export default function Events() {
         )}
 
         {!loading && !error && (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filtered.map((e) => (
-              <EventCard key={e.id} id={e.id} title={e.EVENT} date={e.DATE} location={e.LOCATION} />
-            ))}
-          </div>
+          <>
+            {filteredUpcoming.length > 0 && (
+              <section className="mb-12">
+                <h2 className="font-anton text-3xl text-white mb-6 tracking-wider text-center">
+                  UPCOMING <span className="text-ufc-red">EVENTS</span>
+                </h2>
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {filteredUpcoming.map((e) => (
+                    <EventCard
+                      key={e.id}
+                      id={e.id}
+                      title={e.EVENT}
+                      date={e.DATE}
+                      location={e.LOCATION}
+                      badge="UPCOMING"
+                    />
+                  ))}
+                </div>
+              </section>
+            )}
+
+            <section>
+              <h2 className="font-anton text-3xl text-white mb-6 tracking-wider text-center">
+                PAST <span className="text-ufc-red">EVENTS</span>
+              </h2>
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredPast.map((e) => (
+                  <EventCard key={e.id} id={e.id} title={e.EVENT} date={e.DATE} location={e.LOCATION} />
+                ))}
+              </div>
+            </section>
+          </>
         )}
       </div>
     </div>
   );
 }
 
-function EventCard({ id, title, date, location }: { id: string; title: string; date: string; location: string }) {
+function EventCard({
+  id,
+  title,
+  date,
+  location,
+  badge,
+}: {
+  id: string;
+  title: string;
+  date: string;
+  location: string;
+  badge?: string;
+}) {
   const { url } = useEventPoster(title);
   return (
     <Link to={`/event/${id}`} className="fight-card ufc-glow block hover:scale-[1.01] transition">
@@ -64,6 +117,11 @@ function EventCard({ id, title, date, location }: { id: string; title: string; d
         </div>
       )}
       <div className="p-6">
+        {badge && (
+          <span className="inline-block mb-3 px-3 py-1 bg-ufc-red text-white font-oswald font-bold text-xs tracking-widest">
+            {badge}
+          </span>
+        )}
         <h3 className="font-anton text-xl text-white mb-2 tracking-wider">{title}</h3>
         <div className="text-ufc-metallic font-oswald space-y-2">
           <div className="flex items-center gap-2"><Calendar className="w-4 h-4 text-ufc-red" />{date}</div>

@@ -38,7 +38,7 @@ export default function Index() {
       id: e.id,
       fighters: e.EVENT,
       title: i === 0 ? 'MAIN EVENT' : 'UPCOMING EVENT',
-      date: e.DATE,
+      date: e.mainCardStart ? formatMainCardTime(e.mainCardStart) : e.DATE,
       venue: e.LOCATION,
       mainEvent: i === 0,
     })) : [];
