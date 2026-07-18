@@ -18,6 +18,8 @@ export default function Header() {
     { name: "ABOUT", href: "/about", icon: Info },
   ];
 
+  const leftNavigation = navigation.slice(0, 3);
+  const rightNavigation = navigation.slice(3);
   const isActive = (path: string) => location.pathname === path;
 
   useEffect(() => {
@@ -43,19 +45,9 @@ export default function Header() {
       
       <header className="bg-ufc-black/95 backdrop-blur-sm border-b border-ufc-metallic-dark sticky top-0 z-50">
         <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between h-16">
-            {/* Logo */}
-            <Link to="/" className="flex items-center gap-3 hover:opacity-90 transition-opacity">
-              <img
-                src="/logo.png"
-                alt="Fight Tracker"
-                className="h-10 md:h-12 w-auto object-contain"
-              />
-            </Link>
-
-            {/* Desktop Navigation */}
-            <nav className="hidden md:flex items-center gap-1">
-              {navigation.map((item) => {
+          <div className="flex items-center justify-between h-16 gap-4">
+            <nav className="hidden md:flex items-center gap-1 flex-1 justify-start">
+              {leftNavigation.map((item) => {
                 const Icon = item.icon;
                 return (
                   <Link
@@ -74,23 +66,51 @@ export default function Header() {
               })}
             </nav>
 
-            {/* Desktop CTA */}
-            <div className="hidden md:flex items-center gap-4">
-              {userEmail ? (
-                <>
-                  <span className="text-ufc-metallic font-oswald text-sm tracking-wide">{userEmail}</span>
-                  <button onClick={handleSignOut} className="text-ufc-metallic hover:text-white font-oswald font-semibold tracking-wide transition-colors">
-                    SIGN OUT
-                  </button>
-                </>
-              ) : (
-                <Link to="/signin" className="text-ufc-metallic hover:text-white font-oswald font-semibold tracking-wide transition-colors">
-                  SIGN IN
-                </Link>
-              )}
-              <a href={LIVE_STREAM_URL} target="_blank" rel="noopener noreferrer" className="bg-ufc-red hover:bg-ufc-red-dark text-white px-6 py-2 font-oswald font-bold tracking-wider transition-all duration-300 hover:shadow-lg hover:shadow-ufc-red/30 border border-ufc-red hover:border-white">
-                WATCH LIVE
-              </a>
+            <div className="flex-1 flex justify-center">
+              <Link to="/" className="flex items-center gap-3 hover:opacity-90 transition-opacity">
+                <img
+                  src="/logo.png"
+                  alt="Fight Tracker"
+                  className="h-14 md:h-20 w-auto object-contain"
+                />
+              </Link>
+            </div>
+
+            <div className="hidden md:flex items-center gap-1 justify-end">
+              {rightNavigation.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <Link
+                    key={item.name}
+                    to={item.href}
+                    className={`flex items-center gap-2 px-4 py-3 font-oswald font-bold text-sm tracking-wider transition-all duration-300 ${
+                      isActive(item.href)
+                        ? "bg-ufc-red text-white border-b-2 border-white"
+                        : "text-ufc-metallic hover:text-white hover:bg-ufc-red/20"
+                    }`}
+                  >
+                    <Icon className="w-4 h-4" />
+                    {item.name}
+                  </Link>
+                );
+              })}
+              <div className="flex items-center gap-4 flex-shrink-0 whitespace-nowrap">
+                {userEmail ? (
+                  <>
+                    <span className="text-ufc-metallic font-oswald text-sm tracking-wide whitespace-nowrap">{userEmail}</span>
+                    <button onClick={handleSignOut} className="text-ufc-metallic hover:text-white font-oswald font-semibold tracking-wide whitespace-nowrap transition-colors">
+                      SIGN OUT
+                    </button>
+                  </>
+                ) : (
+                  <Link to="/signin" className="text-ufc-metallic hover:text-white font-oswald font-semibold tracking-wide whitespace-nowrap transition-colors">
+                    SIGN IN
+                  </Link>
+                )}
+                <a href={LIVE_STREAM_URL} target="_blank" rel="noopener noreferrer" className="bg-ufc-red hover:bg-ufc-red-dark text-white px-6 py-2 font-oswald font-bold tracking-wider whitespace-nowrap transition-all duration-300 hover:shadow-lg hover:shadow-ufc-red/30 border border-ufc-red hover:border-white">
+                  WATCH LIVE
+                </a>
+              </div>
             </div>
 
             {/* Mobile Menu Button */}

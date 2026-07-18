@@ -89,6 +89,17 @@ export default function Index() {
     ? formatMainCardTime(nextEvent.mainCardStart)
     : nextEvent?.DATE;
 
+  const isFightDay = useMemo(() => {
+    if (!nextEvent) return false;
+    const eventDate = new Date(nextEvent.mainCardStart ?? nextEvent.DATE);
+    const now = new Date();
+    return (
+      eventDate.getFullYear() === now.getFullYear() &&
+      eventDate.getMonth() === now.getMonth() &&
+      eventDate.getDate() === now.getDate()
+    );
+  }, [nextEvent]);
+
   useEffect(() => {
     if (!nextEventTs) {
       setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
@@ -187,6 +198,11 @@ export default function Index() {
                 <p className="font-oswald text-sm text-ufc-metallic mb-6 tracking-wider">
                   Main card: {mainEventTimeLabel}
                 </p>
+              )}
+              {isFightDay && (
+                <div className="mx-auto mb-6 inline-flex items-center justify-center rounded-full border border-ufc-red bg-ufc-red/10 px-6 py-3 text-sm uppercase tracking-[0.35em] text-white shadow-2xl shadow-ufc-red/20 fight-day-banner">
+                  IT'S FIGHT DAY — STAY LOCKED IN FOR LIVE MATCH ACTION
+                </div>
               )}
               <div className="flex justify-center gap-4 lg:gap-8">
                 {Object.entries(timeLeft).map(([unit, value]) => (

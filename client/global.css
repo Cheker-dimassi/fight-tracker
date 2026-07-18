@@ -151,6 +151,21 @@
     pointer-events: none;
   }
 
+  .fight-day-banner {
+    animation: fightDayPulse 1.7s ease-in-out infinite;
+  }
+
+  @keyframes fightDayPulse {
+    0%, 100% {
+      transform: translateY(0);
+      text-shadow: 0 0 14px rgba(229, 9, 20, 0.6);
+    }
+    50% {
+      transform: translateY(-2px);
+      text-shadow: 0 0 28px rgba(229, 9, 20, 0.9);
+    }
+  }
+
   .button-hover {
     position: relative;
     overflow: hidden;
