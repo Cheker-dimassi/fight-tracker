@@ -148,6 +148,7 @@
     background:
       radial-gradient(circle at 25% 25%, rgba(229, 9, 20, 0.1) 0%, transparent 50%),
       radial-gradient(circle at 75% 75%, rgba(229, 9, 20, 0.1) 0%, transparent 50%);
+    pointer-events: none;
   }
 
   .button-hover {

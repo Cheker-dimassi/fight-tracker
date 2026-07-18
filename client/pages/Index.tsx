@@ -148,7 +148,7 @@ export default function Index() {
       {/* Hero Section with Cage Background */}
       <section className="relative h-screen bg-gradient-to-br from-ufc-black via-ufc-dark-gray to-ufc-black overflow-hidden">
         {/* Cage/Grid Background Pattern */}
-        <div className="absolute inset-0 opacity-10">
+        <div className="absolute inset-0 opacity-10 pointer-events-none z-0">
           <div 
             className="w-full h-full"
             style={{
@@ -162,9 +162,9 @@ export default function Index() {
         </div>
         
         {/* Radial glow effects */}
-        <div className="absolute inset-0 cage-overlay"></div>
+        <div className="absolute inset-0 cage-overlay pointer-events-none z-0"></div>
         
-        <div className="relative container mx-auto px-4 h-full flex items-center">
+        <div className="relative z-10 container mx-auto px-4 h-full flex items-center">
           <div className="max-w-6xl mx-auto text-center text-white">
             <h1 className="font-anton text-6xl lg:text-8xl xl:text-9xl mb-8 leading-none tracking-wider">
               TRACK EVERY
