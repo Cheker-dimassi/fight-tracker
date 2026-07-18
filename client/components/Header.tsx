@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Menu, X, Target, Users, Calendar, BarChart3, Info, Database } from "lucide-react";
 import { clearToken, getMe, readToken } from "@/services/auth";
+import { LIVE_STREAM_URL } from "@/lib/streamLinks";
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -87,7 +88,7 @@ export default function Header() {
                   SIGN IN
                 </Link>
               )}
-              <a href="https://streamseast.me/mma" target="_blank" rel="noopener noreferrer" className="bg-ufc-red hover:bg-ufc-red-dark text-white px-6 py-2 font-oswald font-bold tracking-wider transition-all duration-300 hover:shadow-lg hover:shadow-ufc-red/30 border border-ufc-red hover:border-white">
+              <a href={LIVE_STREAM_URL} target="_blank" rel="noopener noreferrer" className="bg-ufc-red hover:bg-ufc-red-dark text-white px-6 py-2 font-oswald font-bold tracking-wider transition-all duration-300 hover:shadow-lg hover:shadow-ufc-red/30 border border-ufc-red hover:border-white">
                 WATCH LIVE
               </a>
             </div>
@@ -133,7 +134,7 @@ export default function Header() {
                       SIGN IN
                     </Link>
                   )}
-                  <a href="https://streamseast.me/mma" target="_blank" rel="noopener noreferrer" className="w-full block text-center bg-ufc-red hover:bg-ufc-red-dark text-white py-3 font-oswald font-bold tracking-wider transition-all duration-300 border border-ufc-red hover:border-white">
+                  <a href={LIVE_STREAM_URL} target="_blank" rel="noopener noreferrer" className="w-full block text-center bg-ufc-red hover:bg-ufc-red-dark text-white py-3 font-oswald font-bold tracking-wider transition-all duration-300 border border-ufc-red hover:border-white">
                     WATCH LIVE
                   </a>
                 </div>

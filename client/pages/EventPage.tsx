@@ -3,6 +3,7 @@ import { Calendar, Clock, MapPin, ArrowLeft, DollarSign, Ticket, Users, Trophy }
 import { useUfcEvent } from "../hooks/useUfcData";
 import { useFightCardStatus } from "../hooks/useFightCardStatus";
 import { useEventPoster } from "../hooks/useImage";
+import { LIVE_STREAM_URL } from "@/lib/streamLinks";
 
 export default function EventPage() {
   const { id } = useParams();
@@ -108,7 +109,7 @@ export default function EventPage() {
                 <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
                   <div className="flex items-center gap-2 text-2xl font-anton text-ufc-red"><DollarSign className="w-6 h-6" /> PPV</div>
                   <a
-                    href="https://streamseast.me/mma"
+                    href={LIVE_STREAM_URL}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="bg-ufc-red hover:bg-ufc-red-dark text-white px-8 py-4 font-oswald font-bold text-lg tracking-widest transition-all duration-300 border border-ufc-red hover:border-white ufc-glow inline-block text-center"
