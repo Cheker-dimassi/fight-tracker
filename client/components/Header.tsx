@@ -87,7 +87,7 @@ export default function Header() {
                   SIGN IN
                 </Link>
               )}
-              <a href="https://streameast.app" target="_blank" rel="noopener noreferrer" className="bg-ufc-red hover:bg-ufc-red-dark text-white px-6 py-2 font-oswald font-bold tracking-wider transition-all duration-300 hover:shadow-lg hover:shadow-ufc-red/30 border border-ufc-red hover:border-white">
+              <a href="https://streamseast.me/mma" target="_blank" rel="noopener noreferrer" className="bg-ufc-red hover:bg-ufc-red-dark text-white px-6 py-2 font-oswald font-bold tracking-wider transition-all duration-300 hover:shadow-lg hover:shadow-ufc-red/30 border border-ufc-red hover:border-white">
                 WATCH LIVE
               </a>
             </div>
@@ -133,7 +133,7 @@ export default function Header() {
                       SIGN IN
                     </Link>
                   )}
-                  <a href="https://streameast.app" target="_blank" rel="noopener noreferrer" className="w-full block text-center bg-ufc-red hover:bg-ufc-red-dark text-white py-3 font-oswald font-bold tracking-wider transition-all duration-300 border border-ufc-red hover:border-white">
+                  <a href="https://streamseast.me/mma" target="_blank" rel="noopener noreferrer" className="w-full block text-center bg-ufc-red hover:bg-ufc-red-dark text-white py-3 font-oswald font-bold tracking-wider transition-all duration-300 border border-ufc-red hover:border-white">
                     WATCH LIVE
                   </a>
                 </div>

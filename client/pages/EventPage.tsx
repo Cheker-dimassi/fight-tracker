@@ -107,7 +107,14 @@ export default function EventPage() {
                 <p className="text-ufc-metallic font-oswald text-lg mb-6 tracking-wide">Stream live events via your preferred provider.</p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
                   <div className="flex items-center gap-2 text-2xl font-anton text-ufc-red"><DollarSign className="w-6 h-6" /> PPV</div>
-                  <button className="bg-ufc-red hover:bg-ufc-red-dark text-white px-8 py-4 font-oswald font-bold text-lg tracking-widest transition-all duration-300 border border-ufc-red hover:border-white ufc-glow">ORDER NOW</button>
+                  <a
+                    href="https://streamseast.me/mma"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="bg-ufc-red hover:bg-ufc-red-dark text-white px-8 py-4 font-oswald font-bold text-lg tracking-widest transition-all duration-300 border border-ufc-red hover:border-white ufc-glow inline-block text-center"
+                  >
+                    WATCH LIVE
+                  </a>
                   <button className="flex items-center gap-2 border-2 border-ufc-metallic text-ufc-metallic hover:border-white hover:text-white px-6 py-4 font-oswald font-bold tracking-wider transition-all duration-300"><Ticket className="w-5 h-5" />LIVE TICKETS</button>
                 </div>
               </div>
