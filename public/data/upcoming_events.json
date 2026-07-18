@@ -1,0 +1,50 @@
+[
+  {
+    "id": "ufc-fight-night-july-18-2026",
+    "event": "UFC Fight Night: Du Plessis vs. Usman",
+    "location": "Paycom Center, Oklahoma City, OK, USA",
+    "mainCardStart": "2026-07-18T20:00:00-04:00"
+  },
+  {
+    "id": "ufc-fight-night-july-25-2026",
+    "event": "UFC Fight Night: Ankalaev vs. Guskov",
+    "location": "Etihad Arena, Abu Dhabi, UAE",
+    "mainCardStart": "2026-07-25T18:30:00+04:00"
+  },
+  {
+    "id": "ufc-fight-night-august-01-2026",
+    "event": "UFC Fight Night: Medic vs. Rodriguez",
+    "location": "Belgrade Arena, Belgrade, Serbia",
+    "mainCardStart": "2026-08-01T13:00:00-04:00"
+  },
+  {
+    "id": "ufc-fight-night-august-08-2026",
+    "event": "UFC Fight Night: Gamrot vs. Salkilld",
+    "location": "UFC APEX, Las Vegas, NV, USA",
+    "mainCardStart": "2026-08-08T17:00:00-04:00"
+  },
+  {
+    "id": "ufc-330",
+    "event": "UFC 330: Makhachev vs. Machado Garry",
+    "location": "Xfinity Mobile Arena, Philadelphia, PA, USA",
+    "mainCardStart": "2026-08-15T21:00:00-04:00"
+  },
+  {
+    "id": "ufc-fight-night-august-22-2026",
+    "event": "UFC Fight Night: Hernandez vs. Rodrigues",
+    "location": "Golden 1 Center, Sacramento, CA, USA",
+    "mainCardStart": "2026-08-22T20:00:00-04:00"
+  },
+  {
+    "id": "ufc-fight-night-august-29-2026",
+    "event": "UFC Fight Night: Nurmagomedov vs. Song",
+    "location": "Oriental Sports Center, Shanghai, China",
+    "mainCardStart": "2026-08-29T06:00:00-04:00"
+  },
+  {
+    "id": "ufc-fight-night-september-05-2026",
+    "event": "UFC Fight Night: Paris",
+    "location": "Accor Arena, Paris, France",
+    "mainCardStart": "2026-09-05T15:00:00-04:00"
+  }
+]

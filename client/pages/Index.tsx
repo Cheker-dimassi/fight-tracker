@@ -6,13 +6,7 @@ import { useUfcCounts, useUfcEvents } from "../hooks/useUfcData";
 import { useUpcomingFights } from "../hooks/useUpcomingFights";
 import { useFighterImage } from "../hooks/useImage";
 import { LIVE_STREAM_URL } from "@/lib/streamLinks";
-
-interface TimeLeft {
-  days: number;
-  hours: number;
-  minutes: number;
-  seconds: number;
-}
+import { formatMainCardTime, getTimeLeft, type TimeLeft } from "@/lib/eventTime";
 
 function FighterAvatar({ name, url, nickname }: { name: string; url?: string | null; nickname?: string }) {
   const { url: fetched } = useFighterImage(name);
@@ -37,7 +31,7 @@ export default function Index() {
   
   // Fetch events (fallback) and upstream upcoming fights (primary)
   const { data: events } = useUfcEvents();
-  const { data: apiUpcoming, loading: fightsLoading, error: fightsError, nearestTs } = useUpcomingFights();
+  const { data: apiUpcoming, loading: fightsLoading, error: fightsError, nearestTs, nextEvent } = useUpcomingFights();
 
   const upcomingFights = useMemo(() => {
     const primary = apiUpcoming.length ? apiUpcoming.map((e, i) => ({
@@ -67,36 +61,43 @@ export default function Index() {
     statusMessage: fightersStatus
   } = useAllFighters();
 
-  // Using events from above for countdown
-
-  // Compute next upcoming event timestamp (ms). Prefer API, fallback to CSV
+  // Compute next main card timestamp. Prefer API/local schedule, fallback to CSV dates.
   const nextEventTs = useMemo(() => {
     if (nearestTs && !Number.isNaN(nearestTs)) return nearestTs;
     const now = Date.now();
     const candidates = (events || [])
-      .map(e => Date.parse(e.DATE))
-      .filter(ts => !Number.isNaN(ts) && ts >= now)
+      .map((e) => {
+        const ts = Date.parse(e.DATE);
+        if (Number.isNaN(ts)) return null;
+        // CSV dates are date-only; treat as 8 PM Eastern main card.
+        if (ts >= now) {
+          const d = new Date(e.DATE);
+          const eastern = Date.parse(
+            `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}-${String(d.getUTCDate()).padStart(2, "0")}T20:00:00-04:00`,
+          );
+          return Number.isNaN(eastern) ? ts : eastern;
+        }
+        return null;
+      })
+      .filter((ts): ts is number => ts !== null)
       .sort((a, b) => a - b);
-    if (candidates.length > 0) return candidates[0];
-    const fb = new Date();
-    fb.setDate(fb.getDate() + 7);
-    fb.setHours(22, 0, 0, 0);
-    return fb.getTime();
+    return candidates[0] ?? null;
   }, [nearestTs, events]);
 
+  const mainEventLabel = nextEvent?.EVENT;
+  const mainEventTimeLabel = nextEvent?.mainCardStart
+    ? formatMainCardTime(nextEvent.mainCardStart)
+    : nextEvent?.DATE;
+
   useEffect(() => {
-    const timer = setInterval(() => {
-      const now = new Date().getTime();
-      const distance = nextEventTs - now;
+    if (!nextEventTs) {
+      setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+      return;
+    }
 
-      const days = Math.floor(distance / (1000 * 60 * 60 * 24));
-      const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-      const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-      const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-
-      setTimeLeft({ days, hours, minutes, seconds });
-    }, 1000);
-
+    const tick = () => setTimeLeft(getTimeLeft(nextEventTs));
+    tick();
+    const timer = setInterval(tick, 1000);
     return () => clearInterval(timer);
   }, [nextEventTs]);
 
@@ -176,7 +177,17 @@ export default function Index() {
             
             {/* Countdown Timer */}
             <div className="mb-12">
-              <h3 className="font-oswald text-xl mb-6 text-ufc-metallic tracking-widest">NEXT MAIN EVENT</h3>
+              <h3 className="font-oswald text-xl mb-4 text-ufc-metallic tracking-widest">NEXT MAIN EVENT</h3>
+              {mainEventLabel && (
+                <p className="font-oswald text-lg lg:text-xl text-white mb-2 tracking-wide max-w-3xl mx-auto">
+                  {mainEventLabel}
+                </p>
+              )}
+              {mainEventTimeLabel && (
+                <p className="font-oswald text-sm text-ufc-metallic mb-6 tracking-wider">
+                  Main card: {mainEventTimeLabel}
+                </p>
+              )}
               <div className="flex justify-center gap-4 lg:gap-8">
                 {Object.entries(timeLeft).map(([unit, value]) => (
                   <div key={unit} className="text-center">

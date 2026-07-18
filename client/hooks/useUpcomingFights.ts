@@ -1,17 +1,20 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { findNextEventTimestamp, getEventTimestamp, type ScheduledEvent } from "@/lib/eventTime";
 
 export interface UpcomingFight {
   id: string;
   EVENT: string;
   DATE: string;
   LOCATION: string;
+  mainCardStart?: string;
 }
+
+const LOCAL_BASE = `${(import.meta.env.BASE_URL || "/").replace(/\/+$/, "")}/data`;
 
 function coerceArray(input: any): any[] {
   if (!input) return [];
   if (Array.isArray(input)) return input;
   if (typeof input === "object") {
-    // Some providers wrap arrays: { data: [...] } or { result: [...] }
     for (const key of ["data", "result", "results", "events", "fights"]) {
       if (Array.isArray((input as any)[key])) return (input as any)[key];
     }
@@ -28,13 +31,25 @@ function getStr(obj: any, keys: string[], def = "") {
 }
 
 function normalize(items: any[]): UpcomingFight[] {
-  return items.map((it, idx) => {
-    const title = getStr(it, ["event", "title", "event_name", "eventName", "name"]);
-    const date = getStr(it, ["date", "event_date", "eventDate", "datetime", "time", "scheduled_at"]);
-    const loc = getStr(it, ["location", "venue", "place", "arena", "city"], "");
-    const id = getStr(it, ["id", "event_id", "eventId", "code"], `${title || "event"}-${idx}`);
-    return { id, EVENT: title || id, DATE: date, LOCATION: loc };
-  }).filter(e => e.DATE);
+  return items
+    .map((it, idx) => {
+      const title = getStr(it, ["event", "EVENT", "title", "event_name", "eventName", "name"]);
+      const mainCardStart = getStr(it, ["mainCardStart", "main_card_start", "startTime", "start_time"]);
+      const date =
+        mainCardStart ||
+        getStr(it, ["date", "DATE", "event_date", "eventDate", "datetime", "time", "scheduled_at"]);
+      const loc = getStr(it, ["location", "LOCATION", "venue", "place", "arena", "city"], "");
+      const id = getStr(it, ["id", "event_id", "eventId", "code"], `${title || "event"}-${idx}`);
+      return { id, EVENT: title || id, DATE: date, LOCATION: loc, mainCardStart: mainCardStart || undefined };
+    })
+    .filter((e) => e.DATE || e.mainCardStart);
+}
+
+async function fetchLocalSchedule(): Promise<UpcomingFight[]> {
+  const res = await fetch(`${LOCAL_BASE}/upcoming_events.json`, { cache: "no-store" });
+  if (!res.ok) throw new Error(`Failed to load local schedule (${res.status})`);
+  const json = (await res.json()) as ScheduledEvent[];
+  return normalize(json);
 }
 
 export function useUpcomingFights() {
@@ -46,20 +61,23 @@ export function useUpcomingFights() {
     try {
       setLoading(true);
       setError(null);
-      const res = await fetch("/api/upcoming-fights", { cache: "no-store" });
-      if (!res.ok) {
-        let msg = `HTTP ${res.status}`;
-        try {
-          const errBody = await res.json();
-          if (errBody?.message) {
-            msg = errBody.message;
+
+      try {
+        const res = await fetch("/api/upcoming-fights", { cache: "no-store" });
+        if (res.ok) {
+          const json = await res.json();
+          const items = coerceArray(json);
+          const normalized = normalize(items);
+          if (normalized.length > 0) {
+            setData(normalized);
+            return;
           }
-        } catch {}
-        throw new Error(msg);
+        }
+      } catch {
+        // fall through to local schedule
       }
-      const json = await res.json();
-      const items = coerceArray(json);
-      setData(normalize(items));
+
+      setData(await fetchLocalSchedule());
     } catch (e: any) {
       setError(e.message || String(e));
       setData([]);
@@ -72,14 +90,19 @@ export function useUpcomingFights() {
     fetchUpcoming();
   }, [fetchUpcoming]);
 
-  const nearestTs = useMemo(() => {
-    const now = Date.now();
-    const times = data
-      .map(e => Date.parse(e.DATE))
-      .filter(ts => !Number.isNaN(ts) && ts >= now)
-      .sort((a, b) => a - b);
-    return times[0];
-  }, [data]);
+  const nearestTs = useMemo(() => findNextEventTimestamp(data), [data]);
 
-  return { data, loading, error, refetch: fetchUpcoming, nearestTs };
+  const nextEvent = useMemo(() => {
+    if (!nearestTs) return null;
+    return (
+      data.find((event) => getEventTimestamp(event) === nearestTs) ??
+      data.find((event) => {
+        const ts = getEventTimestamp(event);
+        return ts !== null && ts >= Date.now();
+      }) ??
+      null
+    );
+  }, [data, nearestTs]);
+
+  return { data, loading, error, refetch: fetchUpcoming, nearestTs, nextEvent };
 }
