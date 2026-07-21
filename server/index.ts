@@ -9,12 +9,15 @@ import {
   getDivision,
   searchFightersEndpoint,
   createCustomFighter,
-  updateFighterOverride
+  updateFighterOverride,
+  deleteCustomFighter,
+  deleteOverride
 } from "./routes/octagon";
 import { getUpcomingFightsProxy } from "./routes/upcoming";
 import { postFightCardStatusProxy } from "./routes/fightCard";
 import { getFighterImage, getEventPoster } from "./routes/images";
-import { getMe, postSignIn, postSignUp } from "./routes/auth";
+import { getMe, postSignIn, postSignUp, requireAdmin } from "./routes/auth";
+import { getAdminStats, getAdminUsers } from "./routes/admin";
 
 export function createServer() {
   const app = express();
@@ -51,8 +54,14 @@ export function createServer() {
   app.get("/api/rankings", getRankings);
   app.get("/api/division/:divisionId", getDivision);
   app.get("/api/search", searchFightersEndpoint);
-  app.post("/api/fighter/custom", createCustomFighter);
-  app.post("/api/fighter/:fighterId/override", updateFighterOverride);
+  app.post("/api/fighter/custom", requireAdmin, createCustomFighter);
+  app.post("/api/fighter/:fighterId/override", requireAdmin, updateFighterOverride);
+  app.delete("/api/fighter/custom/:fighterId", requireAdmin, deleteCustomFighter);
+  app.delete("/api/fighter/:fighterId/override", requireAdmin, deleteOverride);
+
+  // Admin dashboard endpoints
+  app.get("/api/admin/stats", requireAdmin, getAdminStats);
+  app.get("/api/admin/users", requireAdmin, getAdminUsers);
 
   // External upcoming fights proxy
   app.get("/api/upcoming-fights", getUpcomingFightsProxy);

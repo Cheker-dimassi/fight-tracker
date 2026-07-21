@@ -19,10 +19,11 @@ export interface AuthRequest {
 
 export interface AuthResponse {
   token: string;
-  user: { id: string; email: string };
+  user: { id: string; email: string; isAdmin: boolean };
 }
 
 export interface MeResponse {
   id: string;
   email: string;
+  isAdmin: boolean;
 }

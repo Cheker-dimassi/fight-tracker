@@ -190,7 +190,7 @@ export async function searchFightersEndpoint(req: Request, res: Response) {
       f.name.toLowerCase().includes(queryLower) ||
       (f.nickname && f.nickname.toLowerCase().includes(queryLower)) ||
       f.weightClass.toLowerCase().includes(queryLower) ||
-      f.nationality.toLowerCase().includes(queryLower)
+      (f.nationality && f.nationality.toLowerCase().includes(queryLower))
     );
     const overridden = await Promise.all(searchResults.map(applyCsvOverride));
     const octagonFighters = overridden.map(transformToOctagonFighter);
@@ -274,5 +274,40 @@ export async function createCustomFighter(req: Request, res: Response) {
   } catch (error) {
     console.error('❌ Error creating custom fighter:', error);
     res.status(500).json({ error: 'Failed to create custom fighter' });
+  }
+}
+
+// DELETE /api/fighter/custom/:fighterId - Delete a custom fighter
+export async function deleteCustomFighter(req: Request, res: Response) {
+  try {
+    const fighterId = req.params.fighterId as string;
+    const before = overridesData.customFighters.length;
+    overridesData.customFighters = overridesData.customFighters.filter(f => f.id !== fighterId);
+    if (overridesData.customFighters.length === before) {
+      return res.status(404).json({ error: `Custom fighter with ID ${fighterId} not found` });
+    }
+    saveOverrides();
+    console.log(`✅ Deleted custom fighter: ${fighterId}`);
+    res.json({ success: true, message: `Custom fighter deleted` });
+  } catch (error) {
+    console.error('❌ Error deleting custom fighter:', error);
+    res.status(500).json({ error: 'Failed to delete custom fighter' });
+  }
+}
+
+// DELETE /api/fighter/:fighterId/override - Remove override for a fighter
+export async function deleteOverride(req: Request, res: Response) {
+  try {
+    const fighterId = req.params.fighterId as string;
+    if (!overridesData.overrides[fighterId]) {
+      return res.status(404).json({ error: `No override found for fighter ${fighterId}` });
+    }
+    delete overridesData.overrides[fighterId];
+    saveOverrides();
+    console.log(`✅ Deleted override for fighter: ${fighterId}`);
+    res.json({ success: true, message: `Override deleted for fighter ${fighterId}` });
+  } catch (error) {
+    console.error('❌ Error deleting override:', error);
+    res.status(500).json({ error: 'Failed to delete override' });
   }
 }

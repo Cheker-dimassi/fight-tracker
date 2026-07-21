@@ -7,6 +7,7 @@ import { LIVE_STREAM_URL } from "@/lib/streamLinks";
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const location = useLocation();
 
   const navigation = [
@@ -18,19 +19,29 @@ export default function Header() {
     { name: "ABOUT", href: "/about", icon: Info },
   ];
 
-  const leftNavigation = navigation.slice(0, 3);
-  const rightNavigation = navigation.slice(3);
+  const effectiveNavigation = isAdmin
+    ? navigation
+    : navigation.filter((item) => item.name !== "DATABASE");
+  const leftNavigation = effectiveNavigation.slice(0, 3);
+  const rightNavigation = effectiveNavigation.slice(3);
   const isActive = (path: string) => location.pathname === path;
 
   useEffect(() => {
     const token = readToken();
     if (!token) {
       setUserEmail(null);
+      setIsAdmin(false);
       return;
     }
     getMe(token)
-      .then((u) => setUserEmail(u.email))
-      .catch(() => setUserEmail(null));
+      .then((u) => {
+        setUserEmail(u.email);
+        setIsAdmin(u.isAdmin);
+      })
+      .catch(() => {
+        setUserEmail(null);
+        setIsAdmin(false);
+      });
   }, [location.pathname]);
 
   function handleSignOut() {
@@ -126,7 +137,7 @@ export default function Header() {
           {isMenuOpen && (
             <div className="md:hidden border-t border-ufc-metallic-dark bg-ufc-black/98">
               <nav className="py-4 space-y-1">
-                {navigation.map((item) => {
+                {effectiveNavigation.map((item) => {
                   const Icon = item.icon;
                   return (
                     <Link

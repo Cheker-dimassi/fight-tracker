@@ -26,21 +26,28 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Layout>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/fighters" element={<Fighters />} />
-            <Route path="/fighter/:id" element={<FighterProfile />} />
-            <Route path="/events" element={<Events />} />
-            <Route path="/event/:id" element={<EventPage />} />
-            <Route path="/compare" element={<CompareFighters />} />
-            <Route path="/admin" element={<Admin />} />
-            <Route path="/signin" element={<SignIn />} />
-            <Route path="/about" element={<PlaceholderPage title="About" description="Learn more about Fight Tracker and our mission to bring you the most comprehensive MMA statistics platform." />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </Layout>
+        <Routes>
+          {/* Full-screen pages — no shared Header/Footer */}
+          <Route path="/admin" element={<Admin />} />
+          <Route path="/signin" element={<SignIn />} />
+
+          {/* All other pages use the shared Layout (Header + Footer) */}
+          <Route path="*" element={
+            <Layout>
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/fighters" element={<Fighters />} />
+                <Route path="/fighter/:id" element={<FighterProfile />} />
+                <Route path="/events" element={<Events />} />
+                <Route path="/event/:id" element={<EventPage />} />
+                <Route path="/compare" element={<CompareFighters />} />
+                <Route path="/about" element={<PlaceholderPage title="About" description="Learn more about Fight Tracker and our mission to bring you the most comprehensive MMA statistics platform." />} />
+                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </Layout>
+          } />
+        </Routes>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

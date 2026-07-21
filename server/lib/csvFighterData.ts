@@ -85,12 +85,50 @@ async function loadCsvData() {
   if (_fightHistory && _fighterStats && _fighterStatsByName) return;
 
   const dir = await getCsvDir();
-  
-  const statsText = await fs.readFile(join(dir, 'ufc_fighter_stats.csv'), 'utf8');
-  _fighterStats = parseCsv(statsText) as unknown as UfcFighterRecord[];
-  
-  const historyText = await fs.readFile(join(dir, 'ufc_fight_history.csv'), 'utf8');
-  _fightHistory = parseCsv(historyText) as unknown as UfcFightRecord[];
+  // Prefer the gold dataset if present (single-file export with fight rows)
+  const goldPath = join(dir, 'ufc_gold_dataset_final.csv');
+  const hasGold = await (async () => { try { await fs.access(goldPath); return true; } catch { return false; } })();
+
+  if (hasGold) {
+    const goldText = await fs.readFile(goldPath, 'utf8');
+    const fights = parseCsv(goldText) as unknown as UfcFightRecord[];
+    _fightHistory = fights;
+
+    // build aggregated fighter records from fight rows (wins/losses/draws)
+    const map = new Map<string, Partial<UfcFighterRecord>>();
+    for (const r of fights) {
+      const f1 = String(r.Fighter_1 || '').trim();
+      const f2 = String(r.Fighter_2 || '').trim();
+      if (!f1 || !f2) continue;
+
+      if (!map.has(f1)) map.set(f1, { Fighter_Name: f1, Wins: '0', Losses: '0', Draws: '0', Height: '', Weight: '', Reach: '', Stance: '', DOB: '', SLpM: '', Str_Acc: '', SApM: '', Str_Def: '', TD_Avg: '', TD_Acc: '', TD_Def: '', Sub_Avg: '', Fighter_URL: '' });
+      if (!map.has(f2)) map.set(f2, { Fighter_Name: f2, Wins: '0', Losses: '0', Draws: '0', Height: '', Weight: '', Reach: '', Stance: '', DOB: '', SLpM: '', Str_Acc: '', SApM: '', Str_Def: '', TD_Avg: '', TD_Acc: '', TD_Def: '', Sub_Avg: '', Fighter_URL: '' });
+
+      const winner = String(r.Winner || '').trim();
+      const key1 = f1;
+      const key2 = f2;
+
+      if (winner && (winner.toLowerCase() === f1.toLowerCase())) {
+        map.get(key1)!.Wins = String(parseInt(map.get(key1)!.Wins || '0') + 1);
+        map.get(key2)!.Losses = String(parseInt(map.get(key2)!.Losses || '0') + 1);
+      } else if (winner && (winner.toLowerCase() === f2.toLowerCase())) {
+        map.get(key2)!.Wins = String(parseInt(map.get(key2)!.Wins || '0') + 1);
+        map.get(key1)!.Losses = String(parseInt(map.get(key1)!.Losses || '0') + 1);
+      } else {
+        // Draw / NC / unknown
+        map.get(key1)!.Draws = String(parseInt(map.get(key1)!.Draws || '0') + 1);
+        map.get(key2)!.Draws = String(parseInt(map.get(key2)!.Draws || '0') + 1);
+      }
+    }
+
+    _fighterStats = Array.from(map.values()) as UfcFighterRecord[];
+  } else {
+    const statsText = await fs.readFile(join(dir, 'ufc_fighter_stats.csv'), 'utf8');
+    _fighterStats = parseCsv(statsText) as unknown as UfcFighterRecord[];
+
+    const historyText = await fs.readFile(join(dir, 'ufc_fight_history.csv'), 'utf8');
+    _fightHistory = parseCsv(historyText) as unknown as UfcFightRecord[];
+  }
 
   _fighterStatsByName = new Map();
   for (const r of _fighterStats) {
@@ -263,4 +301,10 @@ export async function getCsvFighterMerge(name: string): Promise<CsvFighterMerge 
     age: ageFromDob(row.DOB),
     stats,
   };
+}
+
+// Return the raw fighter stats derived from CSV (if loaded). Useful for admin summaries.
+export async function listCsvFighters(): Promise<UfcFighterRecord[]> {
+  await loadCsvData();
+  return _fighterStats ? _fighterStats.slice() : [];
 }

@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useState } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -11,6 +11,9 @@ export default function SignIn() {
   const [mode, setMode] = useState<"signin" | "signup">("signin");
 
   const navigate = useNavigate();
+  const location = useLocation();
+  // Redirect back to where the user came from (e.g. /admin), default to /
+  const from = (location.state as { from?: string })?.from || "/";
 
   const schema = z.object({
     email: z.string().email("Enter a valid email"),
@@ -30,7 +33,7 @@ export default function SignIn() {
       const res = await action(values as AuthRequest);
       saveToken(res.token);
       toast.success(mode === "signin" ? "Signed in" : "Account created");
-      navigate("/");
+      navigate(from, { replace: true });
     } catch (err: any) {
       toast.error(err?.message || "Authentication failed");
     }
