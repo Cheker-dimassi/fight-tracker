@@ -81,7 +81,10 @@ export default {
         victory: "#16A34A",
         defeat: "#E50914",
         champion: "#FFD700",
-        gold: "#D97706",
+        gold: {
+          DEFAULT: "#D97706",
+          foreground: "#0A0A0A",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",

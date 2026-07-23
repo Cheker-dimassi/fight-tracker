@@ -4,11 +4,15 @@ import { useUfcEvent } from "../hooks/useUfcData";
 import { useFightCardStatus } from "../hooks/useFightCardStatus";
 import { useEventPoster } from "../hooks/useImage";
 import { useScheduledEvent, type ScheduledBout } from "../hooks/useScheduledEvent";
+import { useAllFighters } from "../hooks/useOctagonApi";
+import { AppFighter } from "@shared/octagon-api";
+import { predictBoutOutcome } from "@/lib/fightPredictor";
 import { LIVE_STREAM_URL } from "@/lib/streamLinks";
 
 export default function EventPage() {
   const { id } = useParams();
   const { data: scheduled, loading: scheduledLoading } = useScheduledEvent(id || null);
+  const { data: allFighters } = useAllFighters();
   const isScheduled = !!scheduled;
   const { data: csvEvent, fights: csvFights, loading: csvLoading, error: csvError } = useUfcEvent(
     isScheduled ? null : id || null,
@@ -92,7 +96,7 @@ export default function EventPage() {
                       </h2>
                       <div className="space-y-4">
                         {segment.bouts.map((bout, idx) => (
-                          <ScheduledBoutCard key={`${segment.name}-${idx}`} bout={bout} />
+                          <ScheduledBoutCard key={`${segment.name}-${idx}`} bout={bout} fighters={allFighters ?? []} />
                         ))}
                       </div>
                     </section>
@@ -168,7 +172,9 @@ export default function EventPage() {
   );
 }
 
-function ScheduledBoutCard({ bout }: { bout: ScheduledBout }) {
+function ScheduledBoutCard({ bout, fighters }: { bout: ScheduledBout; fighters: AppFighter[] }) {
+  const prediction = predictBoutOutcome(bout.fighter1, bout.fighter2, fighters);
+
   return (
     <div className={`fight-card ufc-glow p-6 ${bout.mainEvent ? "border-ufc-red/60" : ""}`}>
       {bout.mainEvent && (
@@ -189,6 +195,18 @@ function ScheduledBoutCard({ bout }: { bout: ScheduledBout }) {
         {bout.weightClass}
         {bout.titleFight ? " • Title Fight" : ""}
       </p>
+      {prediction ? (
+        <div className="mt-4 rounded-3xl border border-ufc-red/20 bg-[#090909] p-4 text-sm text-ufc-metallic">
+          <p className="font-oswald text-[10px] uppercase tracking-[0.35em] text-ufc-red mb-2">Prediction</p>
+          <p className="text-white font-semibold">{prediction.winner.name} by {prediction.method}</p>
+          <p className="mt-1">Confidence: {prediction.confidence}%</p>
+        </div>
+      ) : (
+        <div className="mt-4 rounded-3xl border border-ufc-metallic/20 bg-[#090909] p-4 text-sm text-ufc-metallic">
+          <p className="font-oswald text-[10px] uppercase tracking-[0.35em] text-[#777]">Prediction</p>
+          <p className="mt-1">Unable to predict this matchup from the current roster.</p>
+        </div>
+      )}
     </div>
   );
 }

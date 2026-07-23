@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 import { useUfcCounts, useUfcEvents } from "../hooks/useUfcData";
 import { useUpcomingFights } from "../hooks/useUpcomingFights";
 import { useFighterImage } from "../hooks/useImage";
+import { predictMatchupFromTitle } from "@/lib/fightPredictor";
 import { LIVE_STREAM_URL } from "@/lib/streamLinks";
 import { formatMainCardTime, getTimeLeft, type TimeLeft } from "@/lib/eventTime";
 
@@ -255,6 +256,25 @@ export default function Index() {
         </div>
       </section>
 
+      <section className="py-16 bg-ufc-black border-t border-ufc-dark-gray">
+        <div className="container mx-auto px-4">
+          <div className="max-w-5xl mx-auto rounded-[32px] border border-[#1f1f1f] bg-gradient-to-br from-[#141414] to-[#0b0b0b] p-8 lg:p-10">
+            <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+              <div className="max-w-2xl">
+                <p className="font-oswald text-xs uppercase tracking-[0.35em] text-ufc-red mb-3">Analytics</p>
+                <h2 className="font-anton text-3xl lg:text-4xl text-white tracking-[0.03em]">Dive into the UFC predictions notebook</h2>
+                <p className="mt-4 text-sm lg:text-base text-ufc-metallic leading-7">Explore the built-in notebook for fight trend analysis, outcome modeling, and deeper roster insights pulled from the live dataset.</p>
+              </div>
+              <div className="flex flex-wrap gap-3">
+                <Link to="/analytics" className="bg-ufc-red hover:bg-ufc-red-dark text-white px-5 py-3 font-oswald text-sm tracking-widest transition-all duration-300">
+                  VIEW ANALYTICS HUB
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Upcoming Fights */}
       <section className="py-20 bg-ufc-black">
         <div className="container mx-auto px-4">
@@ -316,6 +336,18 @@ export default function Index() {
                               <span className="font-oswald tracking-wide">{fight.venue}</span>
                             </div>
                           </div>
+
+                          {allFighters && allFighters.length > 0 && (() => {
+                            const prediction = predictMatchupFromTitle(fight.fighters, allFighters);
+                            if (!prediction) return null;
+                            return (
+                              <div className="mt-6 rounded-3xl border border-ufc-red/20 bg-[#080808] p-4 text-sm text-ufc-metallic">
+                                <p className="font-oswald text-[10px] uppercase tracking-[0.35em] text-ufc-red mb-2">Prediction</p>
+                                <p className="text-white font-semibold">{prediction.winner.name} by {prediction.method}</p>
+                                <p className="mt-1">Confidence: {prediction.confidence}%</p>
+                              </div>
+                            );
+                          })()}
 
                           <Link to={`/event/${fight.id}`} className="mt-6 inline-block bg-transparent border-2 border-ufc-red text-ufc-red hover:bg-ufc-red hover:text-white px-6 py-3 font-oswald font-bold tracking-wider transition-all duration-300">
                             VIEW DETAILS

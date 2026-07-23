@@ -161,6 +161,21 @@ function DashboardSection({ stats, loading, onRefresh }: {
         ))}
       </div>
 
+      <div className="rounded-[32px] border border-[#1b1b1b] bg-[#111] p-6 lg:p-8">
+        <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+          <div className="max-w-2xl">
+            <p className="font-oswald text-xs uppercase tracking-[0.35em] text-[#777]">Analytics</p>
+            <h3 className="mt-3 font-anton text-3xl text-white tracking-[0.03em]">Explore the UFC analytics hub</h3>
+            <p className="mt-3 text-sm text-[#aaa] leading-7">Open the analytics hub to inspect fight trend analysis, prediction experiments, and dataset-driven insights powered by the UFC gold dataset.</p>
+          </div>
+          <div className="flex flex-wrap gap-3">
+            <Link to="/analytics" className="rounded-3xl border border-[#292929] bg-[#0b0b0b] px-4 py-3 text-sm text-white hover:border-[#e50914] hover:bg-[#151515] transition">
+              Open analytics hub
+            </Link>
+          </div>
+        </div>
+      </div>
+
       <div className="grid lg:grid-cols-2 gap-6">
         <div className="rounded-[32px] border border-[#1c1c1c] bg-[#0f0f0f] overflow-hidden">
           <div className="flex items-center gap-2.5 px-6 py-4 border-b border-[#1c1c1c]">
@@ -309,7 +324,7 @@ function FighterEditor({
             <input type="number" value={age} onChange={e=>setAge(e.target.value)} className={inputCls} /></div>
           <div><label className={labelCls}>Stance</label>
             <select value={stance} onChange={e=>setStance(e.target.value)} className={inputCls + " appearance-none"}>
-              {["Orthodox","Southpaw","Switch","Karate"].map(s=><option key={s} value={s}>{s}</option>)}
+              {["Orthodox","Southpaw","Switch","Open Stance","Sideways"].map(s=><option key={s} value={s}>{s}</option>)}
             </select></div>
           <div className="col-span-2"><label className={labelCls}>Image URL</label>
             <input type="url" value={imageUrl} onChange={e=>setImageUrl(e.target.value)} placeholder="https://…" className={inputCls} /></div>
@@ -352,7 +367,7 @@ function FighterEditor({
                   <span className="text-[#888]">{l}</span>
                   <span className={v>=90?"text-yellow-400":v>=80?"text-green-400":"text-[#e50914]"}>{v}</span>
                 </div>
-                <input type="range" min={50} max={100} value={v} onChange={e=>s(parseInt(e.target.value,10))} className="w-full accent-[#e50914] cursor-pointer" />
+                <input type="range" min={0} max={100} value={v} onChange={e=>s(parseInt(e.target.value,10))} className="w-full accent-[#e50914] cursor-pointer" />
               </div>
             ))}
           </div>

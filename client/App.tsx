@@ -15,6 +15,7 @@ import FighterProfile from "./pages/FighterProfile";
 import EventPage from "./pages/EventPage";
 import CompareFighters from "./pages/CompareFighters";
 import Fighters from "./pages/Fighters";
+import Analytics from "./pages/Analytics";
 import SignIn from "./pages/SignIn";
 import Admin from "./pages/Admin";
 
@@ -40,6 +41,7 @@ const App = () => (
                 <Route path="/fighter/:id" element={<FighterProfile />} />
                 <Route path="/events" element={<Events />} />
                 <Route path="/event/:id" element={<EventPage />} />
+                <Route path="/analytics" element={<Analytics />} />
                 <Route path="/compare" element={<CompareFighters />} />
                 <Route path="/about" element={<PlaceholderPage title="About" description="Learn more about Fight Tracker and our mission to bring you the most comprehensive MMA statistics platform." />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

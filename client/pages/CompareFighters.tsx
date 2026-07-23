@@ -3,6 +3,7 @@ import { Search, Users, Trophy, Target, TrendingUp, Zap } from "lucide-react";
 import { useAllFighters, useFighterSearch } from "../hooks/useOctagonApi";
 import { AppFighter } from "@shared/octagon-api";
 import { transformRankDisplay, isChampion, isLegend } from "../lib/rankUtils";
+import { predictFightOutcome, type FightPrediction } from "../lib/fightPredictor";
 
 export default function CompareFighters() {
   const [selectedFighter1, setSelectedFighter1] = useState<AppFighter | null>(null);
@@ -53,6 +54,8 @@ export default function CompareFighters() {
     
     return fighters.filter(f => f.id !== excludeFighter?.id);
   };
+
+  const fightPrediction: FightPrediction | null = selectedFighter1 && selectedFighter2 ? predictFightOutcome(selectedFighter1, selectedFighter2) : null;
 
   const FighterCard = ({ fighter, position }: { fighter: AppFighter | null; position: 'left' | 'right' }) => {
     if (!fighter) return null;
@@ -383,45 +386,65 @@ export default function CompareFighters() {
 
         {/* Quick Stats */}
         {selectedFighter1 && selectedFighter2 && (
-          <div className="mt-12 fight-card p-8">
-            <h3 className="font-oswald text-xl text-white mb-6 text-center tracking-widest">
-              QUICK COMPARISON
-            </h3>
-            <div className="grid md:grid-cols-3 gap-6">
-              <div className="text-center">
-                <h4 className="font-oswald text-ufc-red mb-3 tracking-widest">EXPERIENCE</h4>
-                <div className="flex justify-between">
-                  <span className="font-anton text-xl text-white">
-                    {selectedFighter1.record.wins + selectedFighter1.record.losses + selectedFighter1.record.draws}
-                  </span>
-                  <span className="font-oswald text-ufc-metallic">fights</span>
-                  <span className="font-anton text-xl text-white">
-                    {selectedFighter2.record.wins + selectedFighter2.record.losses + selectedFighter2.record.draws}
-                  </span>
+          <>
+            <div className="mt-12 fight-card p-8">
+              <h3 className="font-oswald text-xl text-white mb-6 text-center tracking-widest">
+                QUICK COMPARISON
+              </h3>
+              <div className="grid md:grid-cols-3 gap-6">
+                <div className="text-center">
+                  <h4 className="font-oswald text-ufc-red mb-3 tracking-widest">EXPERIENCE</h4>
+                  <div className="flex justify-between">
+                    <span className="font-anton text-xl text-white">
+                      {selectedFighter1.record.wins + selectedFighter1.record.losses + selectedFighter1.record.draws}
+                    </span>
+                    <span className="font-oswald text-ufc-metallic">fights</span>
+                    <span className="font-anton text-xl text-white">
+                      {selectedFighter2.record.wins + selectedFighter2.record.losses + selectedFighter2.record.draws}
+                    </span>
+                  </div>
                 </div>
-              </div>
-              <div className="text-center">
-                <h4 className="font-oswald text-ufc-red mb-3 tracking-widest">WIN RATE</h4>
-                <div className="flex justify-between">
-                  <span className="font-anton text-xl text-white">
-                    {Math.round((selectedFighter1.record.wins / Math.max(1, selectedFighter1.record.wins + selectedFighter1.record.losses + selectedFighter1.record.draws)) * 100)}%
-                  </span>
-                  <span className="font-oswald text-ufc-metallic">wins</span>
-                  <span className="font-anton text-xl text-white">
-                    {Math.round((selectedFighter2.record.wins / Math.max(1, selectedFighter2.record.wins + selectedFighter2.record.losses + selectedFighter2.record.draws)) * 100)}%
-                  </span>
+                <div className="text-center">
+                  <h4 className="font-oswald text-ufc-red mb-3 tracking-widest">WIN RATE</h4>
+                  <div className="flex justify-between">
+                    <span className="font-anton text-xl text-white">
+                      {Math.round((selectedFighter1.record.wins / Math.max(1, selectedFighter1.record.wins + selectedFighter1.record.losses + selectedFighter1.record.draws)) * 100)}%
+                    </span>
+                    <span className="font-oswald text-ufc-metallic">wins</span>
+                    <span className="font-anton text-xl text-white">
+                      {Math.round((selectedFighter2.record.wins / Math.max(1, selectedFighter2.record.wins + selectedFighter2.record.losses + selectedFighter2.record.draws)) * 100)}%
+                    </span>
+                  </div>
                 </div>
-              </div>
-              <div className="text-center">
-                <h4 className="font-oswald text-ufc-red mb-3 tracking-widest">WEIGHT CLASS</h4>
-                <div className="flex justify-between text-center">
-                  <span className="font-anton text-sm text-white">{selectedFighter1.weightClass}</span>
-                  <span className="font-oswald text-ufc-metallic">vs</span>
-                  <span className="font-anton text-sm text-white">{selectedFighter2.weightClass}</span>
+                <div className="text-center">
+                  <h4 className="font-oswald text-ufc-red mb-3 tracking-widest">WEIGHT CLASS</h4>
+                  <div className="flex justify-between text-center">
+                    <span className="font-anton text-sm text-white">{selectedFighter1.weightClass}</span>
+                    <span className="font-oswald text-ufc-metallic">vs</span>
+                    <span className="font-anton text-sm text-white">{selectedFighter2.weightClass}</span>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
+
+            {fightPrediction && (
+              <div className="mt-8 fight-card p-8 border border-ufc-red/30 bg-[#0d0d0d]">
+                <h3 className="font-oswald text-xl text-white mb-4 text-center tracking-widest">PREDICTION</h3>
+                <div className="text-center max-w-3xl mx-auto space-y-4">
+                  <p className="font-anton text-3xl text-white tracking-[0.02em]">
+                    {fightPrediction.winner.name} is favored to win
+                  </p>
+                  <p className="text-ufc-red font-oswald text-sm uppercase tracking-[0.35em]">
+                    {fightPrediction.method}
+                  </p>
+                  <p className="text-sm text-ufc-metallic">
+                    Confidence: <span className="text-white">{fightPrediction.confidence}%</span>
+                  </p>
+                  <p className="text-sm text-[#bbb] leading-7">{fightPrediction.reason}</p>
+                </div>
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>

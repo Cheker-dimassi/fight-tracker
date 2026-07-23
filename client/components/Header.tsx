@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Menu, X, Target, Users, Calendar, BarChart3, Info, Database } from "lucide-react";
+import { Menu, X, Target, Users, Calendar, BarChart3, Info, Database, TrendingUp } from "lucide-react";
 import { clearToken, getMe, readToken } from "@/services/auth";
 import { LIVE_STREAM_URL } from "@/lib/streamLinks";
 
@@ -14,7 +14,8 @@ export default function Header() {
     { name: "HOME", href: "/", icon: Target },
     { name: "FIGHTERS", href: "/fighters", icon: Users },
     { name: "EVENTS", href: "/events", icon: Calendar },
-    { name: "COMPARE", href: "/compare", icon: BarChart3 },
+    { name: "ANALYTICS", href: "/analytics", icon: BarChart3 },
+    { name: "COMPARE", href: "/compare", icon: TrendingUp },
     { name: "DATABASE", href: "/admin", icon: Database },
     { name: "ABOUT", href: "/about", icon: Info },
   ];
