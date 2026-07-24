@@ -1,76 +1,201 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowLeft, BarChart3, Calendar, Database, FileText, Globe, Users } from "lucide-react";
-import { useUfcCounts } from "../hooks/useUfcData";
+import {
+  ArrowLeft,
+  Users,
+  Calendar,
+  Globe,
+  Swords,
+} from "lucide-react";
+import {
+  PieChart,
+  Pie,
+  Cell,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  LineChart,
+  Line,
+} from "recharts";
+import { getAnalyticsData, CountItem } from "../services/analyticsData";
+
+// Palette pulled straight from the design tokens so charts match the rest of the app
+const OXBLOOD = "#7A1F1F";
+const OXBLOOD_LIGHT = "#A32B2B";
+const GOLD = "#B8912F";
+const BONE = "#EDE6D6";
+const BONE_MUTED = "#A69C88";
+const FENCE = "#3A3530";
+const SLICE_COLORS = [OXBLOOD, GOLD, BONE_MUTED, OXBLOOD_LIGHT, "#4A7A3A", "#6B6355"];
+
+function StatCard({ icon: Icon, label, value }: { icon: any; label: string; value: string }) {
+  return (
+    <div className="ticket-card p-6">
+      <div className="flex items-center gap-3 mb-3">
+        <Icon className="w-4 h-4 text-ufc-red" />
+        <span className="font-display-alt text-xs uppercase tracking-[0.3em] text-ufc-metallic">{label}</span>
+      </div>
+      <div className="font-stat text-3xl text-white">{value}</div>
+    </div>
+  );
+}
+
+function ChartCard({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div className="ticket-card p-6">
+      <h2 className="font-display-alt text-sm uppercase tracking-[0.3em] text-ufc-metallic mb-4">{title}</h2>
+      {children}
+    </div>
+  );
+}
+
+const tooltipStyle = {
+  background: "#1F1B17",
+  border: `1px solid ${FENCE}`,
+  borderRadius: 4,
+  color: BONE,
+  fontFamily: '"IBM Plex Mono", monospace',
+  fontSize: 12,
+};
 
 export default function Analytics() {
-  const { fighters, events, loading } = useUfcCounts();
+  const [data, setData] = useState<Awaited<ReturnType<typeof getAnalyticsData>> | null>(null);
+
+  useEffect(() => {
+    getAnalyticsData().then(setData);
+  }, []);
+
+  if (!data) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <p className="font-display-alt text-ufc-metallic tracking-widest">LOADING ANALYTICS...</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-ufc-black text-white">
-      <section className="relative overflow-hidden py-20">
-        <div className="absolute inset-0 opacity-10 pointer-events-none bg-[radial-gradient(circle_at_top_left,_rgba(229,9,20,0.35),_transparent_35%)]" />
-        <div className="container mx-auto px-4 relative">
-          <div className="max-w-5xl mx-auto rounded-[32px] border border-[#1b1b1b] bg-[#0f0f0f]/95 p-10 shadow-[0_40px_120px_rgba(0,0,0,0.55)]">
-            <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-              <div>
-                <p className="font-oswald text-xs uppercase tracking-[0.35em] text-ufc-red mb-3">Analytics Hub</p>
-                <h1 className="font-anton text-4xl lg:text-5xl tracking-[0.03em] text-white">UFC Fight Data & Prediction Notebook</h1>
-                <p className="mt-4 max-w-3xl text-sm lg:text-base text-ufc-metallic leading-7">Browse the analysis notebook that powers dataset insights, fight outcome prediction experiments, physical advantage studies, and real dataset summaries from the UFC gold CSV.</p>
-              </div>
-
-              <div className="flex flex-wrap gap-3">
-                <Link to="/" className="inline-flex items-center gap-2 rounded-3xl border border-[#333] bg-[#111] px-5 py-3 text-sm text-white transition hover:border-ufc-red hover:text-ufc-red">
-                  <ArrowLeft className="w-4 h-4" /> Back home
-                </Link>
-                <a href="/analytics/ufc-fight-analytics-prediction-1993-2026.ipynb" target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-3xl bg-ufc-red px-5 py-3 text-sm font-bold text-white transition hover:bg-ufc-red-dark">
-                  <FileText className="w-4 h-4" /> Open notebook
-                </a>
-              </div>
+    <div className="min-h-screen bg-background text-foreground">
+      <section className="py-16 border-b border-border cage-overlay">
+        <div className="container mx-auto px-4">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between mb-10">
+            <div>
+              <p className="font-display-alt text-xs uppercase tracking-[0.35em] text-ufc-red mb-2">Analytics</p>
+              <h1 className="font-display text-4xl lg:text-5xl tracking-wider text-white">
+                Real Fight Data, <span className="text-ufc-red">Not Guesses</span>
+              </h1>
+              <p className="mt-3 max-w-2xl text-sm text-ufc-metallic">
+                Every number below is computed directly from the {data.totals.fights.toLocaleString()} fights and{" "}
+                {data.totals.fighters.toLocaleString()} fighters in the live dataset — nothing here is hardcoded.
+              </p>
             </div>
+            <Link
+              to="/"
+              className="inline-flex items-center gap-2 self-start px-5 py-3 border border-border text-sm text-white hover:border-ufc-red hover:text-ufc-red transition"
+            >
+              <ArrowLeft className="w-4 h-4" /> Back home
+            </Link>
+          </div>
 
-            <div className="mt-10 grid gap-6 lg:grid-cols-3">
-              {[
-                { icon: Users, label: "Fighters in dataset", value: loading ? "Loading..." : fighters?.toLocaleString() ?? "N/A" },
-                { icon: Calendar, label: "Events tracked", value: loading ? "Loading..." : events?.toLocaleString() ?? "N/A" },
-                { icon: Globe, label: "Years covered", value: "1993–2026" },
-              ].map((stat) => (
-                <div key={stat.label} className="rounded-3xl border border-[#1b1b1b] bg-[#111] p-6">
-                  <div className="flex items-center gap-3 mb-4">
-                    <stat.icon className="w-5 h-5 text-ufc-red" />
-                    <span className="font-oswald text-xs uppercase tracking-[0.35em] text-[#777]">{stat.label}</span>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <StatCard icon={Users} label="Fighters" value={data.totals.fighters.toLocaleString()} />
+            <StatCard icon={Swords} label="Fights" value={data.totals.fights.toLocaleString()} />
+            <StatCard icon={Calendar} label="Events" value={data.totals.events.toLocaleString()} />
+            <StatCard icon={Globe} label="Years Covered" value={data.totals.yearRange} />
+          </div>
+        </div>
+      </section>
+
+      <section className="py-12">
+        <div className="container mx-auto px-4 grid gap-6 lg:grid-cols-2">
+          <ChartCard title="How Fights End">
+            <ResponsiveContainer width="100%" height={260}>
+              <PieChart>
+                <Pie
+                  data={data.methodBreakdown}
+                  dataKey="count"
+                  nameKey="label"
+                  cx="50%"
+                  cy="50%"
+                  outerRadius={90}
+                  label={(d: CountItem) => `${d.label} (${d.count})`}
+                >
+                  {data.methodBreakdown.map((_, i) => (
+                    <Cell key={i} fill={SLICE_COLORS[i % SLICE_COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip contentStyle={tooltipStyle} />
+              </PieChart>
+            </ResponsiveContainer>
+          </ChartCard>
+
+          <ChartCard title="Fights By Weight Class">
+            <ResponsiveContainer width="100%" height={260}>
+              <BarChart data={data.weightClassBreakdown} layout="vertical" margin={{ left: 40 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke={FENCE} horizontal={false} />
+                <XAxis type="number" tick={{ fill: BONE_MUTED, fontSize: 11 }} />
+                <YAxis type="category" dataKey="label" tick={{ fill: BONE_MUTED, fontSize: 11 }} width={130} />
+                <Tooltip contentStyle={tooltipStyle} />
+                <Bar dataKey="count" fill={OXBLOOD} radius={[0, 2, 2, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </ChartCard>
+
+          <ChartCard title="Fights Per Year">
+            <ResponsiveContainer width="100%" height={260}>
+              <LineChart data={data.fightsPerYear}>
+                <CartesianGrid strokeDasharray="3 3" stroke={FENCE} />
+                <XAxis dataKey="label" tick={{ fill: BONE_MUTED, fontSize: 10 }} interval={4} />
+                <YAxis tick={{ fill: BONE_MUTED, fontSize: 11 }} />
+                <Tooltip contentStyle={tooltipStyle} />
+                <Line type="monotone" dataKey="count" stroke={GOLD} strokeWidth={2} dot={false} />
+              </LineChart>
+            </ResponsiveContainer>
+          </ChartCard>
+
+          <ChartCard title="Which Round Fights End In">
+            <ResponsiveContainer width="100%" height={260}>
+              <BarChart data={data.finishRoundBreakdown}>
+                <CartesianGrid strokeDasharray="3 3" stroke={FENCE} />
+                <XAxis dataKey="label" tick={{ fill: BONE_MUTED, fontSize: 11 }} />
+                <YAxis tick={{ fill: BONE_MUTED, fontSize: 11 }} />
+                <Tooltip contentStyle={tooltipStyle} />
+                <Bar dataKey="count" fill={OXBLOOD_LIGHT} radius={[2, 2, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </ChartCard>
+
+          <ChartCard title="Fighter Stance Distribution">
+            <ResponsiveContainer width="100%" height={260}>
+              <BarChart data={data.stanceBreakdown}>
+                <CartesianGrid strokeDasharray="3 3" stroke={FENCE} />
+                <XAxis dataKey="label" tick={{ fill: BONE_MUTED, fontSize: 11 }} />
+                <YAxis tick={{ fill: BONE_MUTED, fontSize: 11 }} />
+                <Tooltip contentStyle={tooltipStyle} />
+                <Bar dataKey="count" fill={GOLD} radius={[2, 2, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </ChartCard>
+
+          <ChartCard title="Most Wins (Top 10)">
+            <div className="space-y-2">
+              {data.topByWins.map((f, i) => (
+                <div key={f.name} className="flex items-center justify-between py-2 border-b border-border last:border-0">
+                  <div className="flex items-center gap-3">
+                    <span className="font-stat text-xs text-ufc-metallic w-5">{i + 1}</span>
+                    <span className="font-display-alt text-sm text-white tracking-wide">{f.name}</span>
                   </div>
-                  <div className="font-anton text-4xl text-white">{stat.value}</div>
+                  <span className="font-stat text-sm">
+                    <span className="text-green-600">{f.wins}</span>
+                    <span className="text-ufc-metallic">-{f.losses}-{f.draws}</span>
+                  </span>
                 </div>
               ))}
             </div>
-
-            <div className="mt-10 grid gap-6 lg:grid-cols-2">
-              <div className="rounded-[32px] border border-[#1b1b1b] bg-[#111] p-7">
-                <div className="flex items-center gap-3 mb-5">
-                  <BarChart3 className="w-5 h-5 text-ufc-red" />
-                  <h2 className="font-oswald text-sm uppercase tracking-[0.35em] text-[#777]">What’s inside</h2>
-                </div>
-                <ul className="space-y-4 text-sm text-ufc-metallic leading-7">
-                  <li>• Fight outcome distributions by finish method, duration, and scorecards.</li>
-                  <li>• Reach, striking, takedown, and control advantages for winner prediction.</li>
-                  <li>• A Random Forest model trained on in-fight metrics to predict results.</li>
-                  <li>• Data cleaning and merging of fight rows with fighter profile data.</li>
-                </ul>
-              </div>
-
-              <div className="rounded-[32px] border border-[#1b1b1b] bg-[#111] p-7">
-                <div className="flex items-center gap-3 mb-5">
-                  <Database className="w-5 h-5 text-ufc-red" />
-                  <h2 className="font-oswald text-sm uppercase tracking-[0.35em] text-[#777]">Notebook sources</h2>
-                </div>
-                <p className="text-sm text-ufc-metallic leading-7 mb-6">The notebook is built from the attached UFC gold dataset and fighter profile CSV files. It is served directly from public assets so you can open it in the browser or download it for deeper offline review.</p>
-                <div className="grid gap-3">
-                  <a href="/analytics/ufc-fight-analytics-prediction-1993-2026.ipynb" target="_blank" rel="noreferrer" className="rounded-3xl border border-[#333] bg-[#0b0b0b] px-4 py-3 text-sm text-white hover:border-ufc-red transition">Open analytics notebook</a>
-                  <a href="/data/ufc_gold_dataset_final.csv" download className="rounded-3xl border border-[#333] bg-[#0b0b0b] px-4 py-3 text-sm text-[#aaa] hover:border-ufc-red hover:text-white transition">Download UFC gold dataset (CSV)</a>
-                </div>
-              </div>
-            </div>
-          </div>
+          </ChartCard>
         </div>
       </section>
     </div>
