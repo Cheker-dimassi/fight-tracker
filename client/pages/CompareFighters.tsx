@@ -1,17 +1,51 @@
 import { useState, useEffect } from "react";
-import { Search, Users, Trophy, Target, TrendingUp, Zap } from "lucide-react";
+import { useSearchParams, Link } from "react-router-dom";
+import { Search, Users, Trophy, Target, TrendingUp, Zap, CheckCircle2 } from "lucide-react";
 import { useAllFighters, useFighterSearch } from "../hooks/useOctagonApi";
 import { AppFighter } from "@shared/octagon-api";
 import { transformRankDisplay, isChampion, isLegend } from "../lib/rankUtils";
 import { predictFightOutcome, type FightPrediction } from "../lib/fightPredictor";
+import { getFightHistory } from "../services/ufcData";
+
+function findFighterByName(query: string | null, fighters: AppFighter[]): AppFighter | null {
+  if (!query) return null;
+  const norm = query.trim().toLowerCase();
+  if (!norm) return null;
+  const exact = fighters.find((f) => f.name.toLowerCase() === norm);
+  if (exact) return exact;
+  const inc = fighters.find((f) => f.name.toLowerCase().includes(norm) || norm.includes(f.name.toLowerCase()));
+  if (inc) return inc;
+  const lastName = norm.split(/\s+/).pop();
+  if (lastName && lastName.length >= 3) {
+    const byLast = fighters.find((f) => f.name.toLowerCase().endsWith(lastName));
+    if (byLast) return byLast;
+  }
+  return null;
+}
 
 export default function CompareFighters() {
+  const [searchParams] = useSearchParams();
+  const f1Param = searchParams.get("f1");
+  const f2Param = searchParams.get("f2");
+  const winnerParam = searchParams.get("winner");
+  const methodParam = searchParams.get("method");
+  const roundParam = searchParams.get("round");
+  const timeParam = searchParams.get("time");
+
   const [selectedFighter1, setSelectedFighter1] = useState<AppFighter | null>(null);
   const [selectedFighter2, setSelectedFighter2] = useState<AppFighter | null>(null);
   const [searchTerm1, setSearchTerm1] = useState("");
   const [searchTerm2, setSearchTerm2] = useState("");
   const [showDropdown1, setShowDropdown1] = useState(false);
   const [showDropdown2, setShowDropdown2] = useState(false);
+
+  const [actualResult, setActualResult] = useState<{
+    winner: string;
+    method: string;
+    round?: string;
+    time?: string;
+    eventDate?: string;
+  } | null>(null);
 
   // Fetch all fighters for initial selection
   const {
@@ -23,15 +57,79 @@ export default function CompareFighters() {
   const { data: searchResults1, search: search1 } = useFighterSearch();
   const { data: searchResults2, search: search2 } = useFighterSearch();
 
-  // Set initial fighters when data loads
+  // Set initial fighters when data loads or URL query params change
   useEffect(() => {
-    if (allFighters && allFighters.length >= 2 && !selectedFighter1 && !selectedFighter2) {
+    if (!allFighters || allFighters.length < 2) return;
+
+    if (f1Param || f2Param) {
+      const match1 = findFighterByName(f1Param, allFighters);
+      const match2 = findFighterByName(f2Param, allFighters);
+
+      const f1 = match1 || allFighters[0];
+      const f2 = match2 || (f1.id === allFighters[1].id ? allFighters[0] : allFighters[1]);
+
+      setSelectedFighter1(f1);
+      setSelectedFighter2(f2);
+      setSearchTerm1(f1.name);
+      setSearchTerm2(f2.name);
+    } else if (!selectedFighter1 && !selectedFighter2) {
       setSelectedFighter1(allFighters[0]);
       setSelectedFighter2(allFighters[1]);
       setSearchTerm1(allFighters[0].name);
       setSearchTerm2(allFighters[1].name);
     }
-  }, [allFighters, selectedFighter1, selectedFighter2]);
+  }, [allFighters, f1Param, f2Param]);
+
+  // Look up if an actual historical fight result exists between the two selected fighters
+  useEffect(() => {
+    if (!selectedFighter1 || !selectedFighter2) {
+      setActualResult(null);
+      return;
+    }
+
+    let cancelled = false;
+
+    // Check URL params first if explicitly passed from completed fight page
+    if (winnerParam) {
+      setActualResult({
+        winner: winnerParam,
+        method: methodParam || "Decision",
+        round: roundParam || undefined,
+        time: timeParam || undefined,
+      });
+    }
+
+    getFightHistory().then((history) => {
+      if (cancelled) return;
+      const n1 = selectedFighter1.name.trim().toLowerCase();
+      const n2 = selectedFighter2.name.trim().toLowerCase();
+
+      const match = history.find((row) => {
+        const rowF1 = (row.Fighter_1 || "").trim().toLowerCase();
+        const rowF2 = (row.Fighter_2 || "").trim().toLowerCase();
+        return (
+          (rowF1.includes(n1) || n1.includes(rowF1)) && (rowF2.includes(n2) || n2.includes(rowF2)) ||
+          (rowF1.includes(n2) || n2.includes(rowF1)) && (rowF2.includes(n1) || n1.includes(rowF2))
+        );
+      });
+
+      if (match) {
+        setActualResult({
+          winner: match.Winner || winnerParam || "Completed",
+          method: match.Method || methodParam || "N/A",
+          round: match.End_Round || roundParam,
+          time: match.End_Time || timeParam,
+          eventDate: match.Event_Date,
+        });
+      }
+    }).catch(() => {
+      // Ignore fallback errors
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedFighter1, selectedFighter2, winnerParam, methodParam, roundParam, timeParam]);
 
   // Handle search for fighter 1
   useEffect(() => {
@@ -60,9 +158,16 @@ export default function CompareFighters() {
   const FighterCard = ({ fighter, position }: { fighter: AppFighter | null; position: 'left' | 'right' }) => {
     if (!fighter) return null;
 
+    const isWinner = actualResult && actualResult.winner.toLowerCase().includes(fighter.name.toLowerCase());
+
     return (
-      <div className="fight-card p-6">
+      <div className={`fight-card p-6 ${isWinner ? 'border-2 border-green-500/80 bg-green-950/10' : ''}`}>
         <div className="text-center mb-6">
+          {isWinner && (
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-green-600 text-white font-oswald font-bold text-xs tracking-widest uppercase rounded mb-3">
+              <CheckCircle2 className="w-3.5 h-3.5" /> VICTOR
+            </div>
+          )}
           <div className="w-32 h-32 bg-gradient-to-br from-ufc-red/30 to-ufc-dark-gray rounded-lg mx-auto mb-4 flex items-center justify-center border-2 border-ufc-metallic-dark">
             <span className="font-anton text-3xl text-white">
               {fighter.nickname ? fighter.nickname.charAt(0) : fighter.name.charAt(0)}
@@ -427,12 +532,37 @@ export default function CompareFighters() {
               </div>
             </div>
 
+            {actualResult && (
+              <div className="mt-8 fight-card p-8 border-2 border-green-500/60 bg-gradient-to-r from-green-950/40 via-[#0d0d0d] to-green-950/40 text-center">
+                <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-green-600 text-white font-oswald font-bold text-xs tracking-widest uppercase rounded mb-4">
+                  <Trophy className="w-4 h-4 text-yellow-300" /> HISTORICAL FIGHT RESULT
+                </div>
+                <div className="max-w-3xl mx-auto space-y-3">
+                  <p className="font-anton text-3xl lg:text-4xl text-white tracking-[0.02em]">
+                    {actualResult.winner} <span className="text-green-400">VICTORIOUS</span>
+                  </p>
+                  <p className="text-green-400 font-oswald text-base uppercase tracking-[0.25em]">
+                    METHOD: {actualResult.method}
+                    {actualResult.round ? ` • ROUND ${actualResult.round}` : ""}
+                    {actualResult.time ? ` (${actualResult.time})` : ""}
+                  </p>
+                  {actualResult.eventDate && (
+                    <p className="text-xs text-ufc-metallic font-oswald tracking-widest uppercase">
+                      DATE: {actualResult.eventDate}
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
+
             {fightPrediction && (
               <div className="mt-8 fight-card p-8 border border-ufc-red/30 bg-[#0d0d0d]">
-                <h3 className="font-oswald text-xl text-white mb-4 text-center tracking-widest">PREDICTION</h3>
+                <h3 className="font-oswald text-xl text-white mb-4 text-center tracking-widest">
+                  {actualResult ? "STATISTICAL MATCHUP ANALYSIS" : "PREDICTION"}
+                </h3>
                 <div className="text-center max-w-3xl mx-auto space-y-4">
                   <p className="font-anton text-3xl text-white tracking-[0.02em]">
-                    {fightPrediction.winner.name} is favored to win
+                    {fightPrediction.winner.name} is favored by model
                   </p>
                   <p className="text-ufc-red font-oswald text-sm uppercase tracking-[0.35em]">
                     {fightPrediction.method}

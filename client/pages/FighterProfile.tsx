@@ -322,10 +322,18 @@ export default function FighterProfile() {
                             {fight.event} • {fight.date}
                           </p>
                         </div>
-                        <div className={`inline-block px-3 py-1 font-oswald font-bold text-sm tracking-widest ${
-                          fight.result === 'WIN' ? 'bg-green-600 text-white' : 'bg-ufc-red text-white'
-                        }`}>
-                          {fight.result}
+                        <div className="flex items-center gap-3 mt-2 lg:mt-0">
+                          <Link
+                            to={`/compare?f1=${encodeURIComponent(fighter.name)}&f2=${encodeURIComponent(fight.opponent)}&winner=${encodeURIComponent(fight.result === 'WIN' ? fighter.name : fight.opponent)}&method=${encodeURIComponent(fight.method)}&round=${fight.round}&time=${encodeURIComponent(fight.time)}`}
+                            className="text-xs font-oswald text-ufc-red hover:underline tracking-wider"
+                          >
+                            COMPARE MATCHUP →
+                          </Link>
+                          <div className={`inline-block px-3 py-1 font-oswald font-bold text-sm tracking-widest ${
+                            fight.result === 'WIN' ? 'bg-green-600 text-white' : 'bg-ufc-red text-white'
+                          }`}>
+                            {fight.result}
+                          </div>
                         </div>
                       </div>
                       <p className="text-ufc-metallic font-oswald tracking-wide">

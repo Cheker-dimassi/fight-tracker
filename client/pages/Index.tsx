@@ -349,9 +349,26 @@ export default function Index() {
                             );
                           })()}
 
-                          <Link to={`/event/${fight.id}`} className="mt-6 inline-block bg-transparent border-2 border-ufc-red text-ufc-red hover:bg-ufc-red hover:text-white px-6 py-3 font-oswald font-bold tracking-wider transition-all duration-300">
-                            VIEW DETAILS
-                          </Link>
+                          <div className="mt-6 flex flex-wrap gap-3 justify-center">
+                            {(() => {
+                              const title = fight.fighters;
+                              const battleText = title.includes(":") ? title.substring(title.lastIndexOf(":") + 1).trim() : title;
+                              const parts = battleText.split(/\s+vs\.?\s+|\s+v\s+|\s+versus\s+/i).map((part) => part.trim()).filter(Boolean);
+                              const f1 = parts[0] || "";
+                              const f2 = parts[1] || "";
+                              return (
+                                <Link
+                                  to={f1 && f2 ? `/compare?f1=${encodeURIComponent(f1)}&f2=${encodeURIComponent(f2)}` : "/compare"}
+                                  className="bg-ufc-red text-white hover:bg-ufc-red-dark px-6 py-3 font-oswald font-bold tracking-wider transition-all duration-300 inline-block"
+                                >
+                                  COMPARE FIGHTERS
+                                </Link>
+                              );
+                            })()}
+                            <Link to={`/event/${fight.id}`} className="bg-transparent border-2 border-ufc-metallic text-ufc-metallic hover:border-white hover:text-white px-6 py-3 font-oswald font-bold tracking-wider transition-all duration-300 inline-block">
+                              VIEW DETAILS
+                            </Link>
+                          </div>
                         </div>
                       </div>
                     ))}

@@ -110,20 +110,29 @@ export default function EventPage() {
             ) : (
               <div className="space-y-6">
                 {csvFights.map((f, idx) => (
-                  <div key={`${f.Fight_URL || idx}`} className="fight-card ufc-glow p-6">
+                  <Link
+                    key={`${f.Fight_URL || idx}`}
+                    to={`/compare?f1=${encodeURIComponent(f.Fighter_1)}&f2=${encodeURIComponent(f.Fighter_2)}&winner=${encodeURIComponent(f.Winner)}&method=${encodeURIComponent(f.Method)}&round=${f.End_Round}&time=${encodeURIComponent(f.End_Time)}`}
+                    className="fight-card ufc-glow p-6 block hover:scale-[1.01] transition-transform cursor-pointer"
+                  >
                     <div className="text-center mb-4">
-                      <h3 className="font-anton text-2xl text-white tracking-wider">
+                      <h3 className="font-anton text-2xl text-white tracking-wider hover:text-ufc-red transition-colors">
                         {f.Fighter_1} vs. {f.Fighter_2}
                       </h3>
                       <p className="font-oswald text-ufc-metallic mt-2">
                         {f.Weight_Class} • {f.Method} • R{f.End_Round} {f.End_Time}
                       </p>
                     </div>
-                    <div className="grid sm:grid-cols-2 gap-4 font-oswald text-sm text-ufc-metallic">
-                      <div>Winner: <span className="text-white">{f.Winner || "N/A"}</span></div>
+                    <div className="grid sm:grid-cols-2 gap-4 font-oswald text-sm text-ufc-metallic text-center sm:text-left">
+                      <div>Winner: <span className="text-green-400 font-bold">{f.Winner || "N/A"}</span></div>
                       <div>Sig. Strikes: <span className="text-white">{f.F1_Sig_Landed}/{f.F1_Sig_Att} vs {f.F2_Sig_Landed}/{f.F2_Sig_Att}</span></div>
                     </div>
-                  </div>
+                    <div className="mt-4 text-center">
+                      <span className="inline-block bg-ufc-red/10 border border-ufc-red/40 hover:bg-ufc-red hover:text-white text-ufc-red font-oswald text-xs font-bold px-4 py-2 tracking-widest transition-colors rounded">
+                        COMPARE FIGHTERS & RESULT DETAILS →
+                      </span>
+                    </div>
+                  </Link>
                 ))}
               </div>
             )}
@@ -176,7 +185,10 @@ function ScheduledBoutCard({ bout, fighters }: { bout: ScheduledBout; fighters: 
   const prediction = predictBoutOutcome(bout.fighter1, bout.fighter2, fighters);
 
   return (
-    <div className={`fight-card ufc-glow p-6 ${bout.mainEvent ? "border-ufc-red/60" : ""}`}>
+    <Link
+      to={`/compare?f1=${encodeURIComponent(bout.fighter1)}&f2=${encodeURIComponent(bout.fighter2)}`}
+      className={`fight-card ufc-glow p-6 block hover:scale-[1.01] transition-transform cursor-pointer ${bout.mainEvent ? "border-ufc-red/60" : ""}`}
+    >
       {bout.mainEvent && (
         <div className="text-center mb-4">
           <span className="px-4 py-1 bg-ufc-red text-white font-oswald font-bold text-xs tracking-widest">MAIN EVENT</span>
@@ -207,7 +219,12 @@ function ScheduledBoutCard({ bout, fighters }: { bout: ScheduledBout; fighters: 
           <p className="mt-1">Unable to predict this matchup from the current roster.</p>
         </div>
       )}
-    </div>
+      <div className="mt-4 text-center">
+        <span className="inline-block bg-ufc-red/10 border border-ufc-red/40 hover:bg-ufc-red hover:text-white text-ufc-red font-oswald text-xs font-bold px-4 py-2 tracking-widest transition-colors rounded">
+          COMPARE FIGHTERS →
+        </span>
+      </div>
+    </Link>
   );
 }
 
