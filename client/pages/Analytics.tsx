@@ -20,7 +20,6 @@ import {
   ResponsiveContainer,
   LineChart,
   Line,
-  PieLabelRenderProps,
 } from "recharts";
 import { getAnalyticsData, CountItem } from "../services/analyticsData";
 
@@ -32,50 +31,6 @@ const BONE = "#EDE6D6";
 const BONE_MUTED = "#A69C88";
 const FENCE = "#3A3530";
 const SLICE_COLORS = [OXBLOOD, GOLD, BONE_MUTED, OXBLOOD_LIGHT, "#4A7A3A", "#6B6355"];
-
-const RADIAN = Math.PI / 180;
-
-/**
- * Custom pie label — ALL slices labelled, none hidden.
- * Tiny slices (< 3 %) get a longer leader line and are staggered
- * by their array index so adjacent labels fan out instead of stacking.
- */
-function renderPieLabel(props: PieLabelRenderProps) {
-  const { cx, cy, midAngle, outerRadius, name, value, percent, index } = props as any;
-  const pct: number = (percent ?? 0) * 100;
-
-  // Base distance from centre to the label anchor
-  const BASE = (outerRadius as number) + 48;
-  // Tiny adjacent slices get extra stagger so they don't sit on the same pixel
-  const extraR = pct < 3 ? 20 + (index % 2) * 26 : 0;
-  const r = BASE + extraR;
-
-  const x = (cx as number) + r * Math.cos(-midAngle * RADIAN);
-  const y = (cy as number) + r * Math.sin(-midAngle * RADIAN);
-
-  // Line from slice edge to label
-  const lx = (cx as number) + ((outerRadius as number) + 4) * Math.cos(-midAngle * RADIAN);
-  const ly = (cy as number) + ((outerRadius as number) + 4) * Math.sin(-midAngle * RADIAN);
-
-  const anchor = x > (cx as number) ? "start" : "end";
-
-  return (
-    <g>
-      <line x1={lx} y1={ly} x2={x} y2={y} stroke={BONE_MUTED} strokeWidth={1} strokeDasharray={pct < 3 ? "3 2" : "none"} />
-      <text
-        x={x + (anchor === "start" ? 4 : -4)}
-        y={y}
-        fill={BONE}
-        textAnchor={anchor}
-        dominantBaseline="central"
-        fontSize={11}
-        fontFamily='"IBM Plex Mono", monospace'
-      >
-        {name} ({(value as number).toLocaleString()})
-      </text>
-    </g>
-  );
-}
 
 function StatCard({ icon: Icon, label, value }: { icon: any; label: string; value: string }) {
   return (
@@ -157,27 +112,49 @@ export default function Analytics() {
       <section className="py-12">
         <div className="container mx-auto px-4 grid gap-6 lg:grid-cols-2">
           <ChartCard title="How Fights End">
-            <ResponsiveContainer width="100%" height={340}>
-              <PieChart margin={{ top: 30, right: 110, bottom: 30, left: 110 }}>
-                <Pie
-                  data={data.methodBreakdown}
-                  dataKey="count"
-                  nameKey="label"
-                  cx="50%"
-                  cy="50%"
-                  outerRadius={85}
-                  paddingAngle={1}
-                  labelLine={false}
-                  label={renderPieLabel}
-                >
-                  {data.methodBreakdown.map((_, i) => (
-                    <Cell key={i} fill={SLICE_COLORS[i % SLICE_COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip contentStyle={tooltipStyle} formatter={(val: number) => [val.toLocaleString(), "Fights"]} />
-              </PieChart>
-            </ResponsiveContainer>
+            <div className="flex flex-col gap-6">
+              <ResponsiveContainer width="100%" height={220}>
+                <PieChart margin={{ top: 10, right: 10, bottom: 10, left: 10 }}>
+                  <Pie
+                    data={data.methodBreakdown}
+                    dataKey="count"
+                    nameKey="label"
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={95}
+                    paddingAngle={1}
+                    labelLine={false}
+                    label={false}
+                  >
+                    {data.methodBreakdown.map((_, i) => (
+                      <Cell key={i} fill={SLICE_COLORS[i % SLICE_COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip contentStyle={tooltipStyle} formatter={(val: number) => [val.toLocaleString(), "Fights"]} />
+                </PieChart>
+              </ResponsiveContainer>
+
+              <div className="flex flex-col gap-2.5 px-2">
+                {data.methodBreakdown.map((item, i) => (
+                  <div key={item.label} className="flex items-center justify-between py-1.5 border-b border-border/40 last:border-0">
+                    <div className="flex items-center gap-3">
+                      <span
+                        className="w-3 h-3 rounded-sm flex-shrink-0"
+                        style={{ backgroundColor: SLICE_COLORS[i % SLICE_COLORS.length] }}
+                      />
+                      <span className="font-display-alt text-xs uppercase tracking-wider text-ufc-metallic">
+                        {item.label}
+                      </span>
+                    </div>
+                    <span className="font-stat text-sm text-white font-semibold">
+                      {item.count.toLocaleString()}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
           </ChartCard>
+
 
 
           <ChartCard title="Fights By Weight Class">
