@@ -20,6 +20,7 @@ import {
   ResponsiveContainer,
   LineChart,
   Line,
+  PieLabelRenderProps,
 } from "recharts";
 import { getAnalyticsData, CountItem } from "../services/analyticsData";
 
@@ -31,6 +32,45 @@ const BONE = "#EDE6D6";
 const BONE_MUTED = "#A69C88";
 const FENCE = "#3A3530";
 const SLICE_COLORS = [OXBLOOD, GOLD, BONE_MUTED, OXBLOOD_LIGHT, "#4A7A3A", "#6B6355"];
+
+const RADIAN = Math.PI / 180;
+
+// Only render the label when the slice is large enough not to collide (≥ 4% of total)
+function renderPieLabel(total: number) {
+  return function CustomLabel(props: PieLabelRenderProps) {
+    const { cx, cy, midAngle, innerRadius, outerRadius, name, value } = props as any;
+    const pct = total > 0 ? (value / total) * 100 : 0;
+    if (pct < 4) return null; // skip tiny slices — they appear in the legend below
+
+    const LABEL_OFFSET = 28;
+    const radius = (outerRadius as number) + LABEL_OFFSET;
+    const x = (cx as number) + radius * Math.cos(-midAngle * RADIAN);
+    const y = (cy as number) + radius * Math.sin(-midAngle * RADIAN);
+    // connector line endpoints
+    const midRadius = ((innerRadius as number) + (outerRadius as number)) / 2;
+    const lx1 = (cx as number) + (outerRadius as number) * 0.95 * Math.cos(-midAngle * RADIAN);
+    const ly1 = (cy as number) + (outerRadius as number) * 0.95 * Math.sin(-midAngle * RADIAN);
+    const lx2 = (cx as number) + ((outerRadius as number) + LABEL_OFFSET * 0.6) * Math.cos(-midAngle * RADIAN);
+    const ly2 = (cy as number) + ((outerRadius as number) + LABEL_OFFSET * 0.6) * Math.sin(-midAngle * RADIAN);
+
+    return (
+      <g>
+        <line x1={lx1} y1={ly1} x2={lx2} y2={ly2} stroke={BONE_MUTED} strokeWidth={1} />
+        <text
+          x={x}
+          y={y}
+          fill={BONE}
+          textAnchor={x > (cx as number) ? "start" : "end"}
+          dominantBaseline="central"
+          fontSize={11}
+          fontFamily='"IBM Plex Mono", monospace'
+        >
+          {name} ({value.toLocaleString()})
+        </text>
+      </g>
+    );
+  };
+}
 
 function StatCard({ icon: Icon, label, value }: { icon: any; label: string; value: string }) {
   return (
@@ -112,25 +152,51 @@ export default function Analytics() {
       <section className="py-12">
         <div className="container mx-auto px-4 grid gap-6 lg:grid-cols-2">
           <ChartCard title="How Fights End">
-            <ResponsiveContainer width="100%" height={260}>
-              <PieChart>
-                <Pie
-                  data={data.methodBreakdown}
-                  dataKey="count"
-                  nameKey="label"
-                  cx="50%"
-                  cy="50%"
-                  outerRadius={90}
-                  label={(d: CountItem) => `${d.label} (${d.count})`}
-                >
-                  {data.methodBreakdown.map((_, i) => (
-                    <Cell key={i} fill={SLICE_COLORS[i % SLICE_COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip contentStyle={tooltipStyle} />
-              </PieChart>
-            </ResponsiveContainer>
+            {(() => {
+              const total = data.methodBreakdown.reduce((s, d) => s + d.count, 0);
+              const bigSlices = data.methodBreakdown.filter(d => (d.count / total) * 100 >= 4);
+              const smallSlices = data.methodBreakdown.filter(d => (d.count / total) * 100 < 4);
+              return (
+                <>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <PieChart margin={{ top: 20, right: 60, bottom: 20, left: 60 }}>
+                      <Pie
+                        data={data.methodBreakdown}
+                        dataKey="count"
+                        nameKey="label"
+                        cx="50%"
+                        cy="50%"
+                        outerRadius={95}
+                        labelLine={false}
+                        label={renderPieLabel(total)}
+                      >
+                        {data.methodBreakdown.map((_, i) => (
+                          <Cell key={i} fill={SLICE_COLORS[i % SLICE_COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip contentStyle={tooltipStyle} formatter={(val: number) => [val.toLocaleString(), "Fights"]} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                  {smallSlices.length > 0 && (
+                    <div className="flex flex-wrap gap-x-5 gap-y-1 mt-2 justify-center">
+                      {smallSlices.map((d, i) => {
+                        const colorIdx = data.methodBreakdown.indexOf(d);
+                        return (
+                          <div key={d.label} className="flex items-center gap-1.5">
+                            <span className="w-2.5 h-2.5 rounded-sm flex-shrink-0" style={{ background: SLICE_COLORS[colorIdx % SLICE_COLORS.length] }} />
+                            <span style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, color: BONE_MUTED }}>
+                              {d.label}: {d.count.toLocaleString()}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </>
+              );
+            })()}
           </ChartCard>
+
 
           <ChartCard title="Fights By Weight Class">
             <ResponsiveContainer width="100%" height={260}>
