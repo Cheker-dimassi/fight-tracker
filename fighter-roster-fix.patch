@@ -1,0 +1,202 @@
+diff --git a/client/pages/Fighters.tsx b/client/pages/Fighters.tsx
+index 47cfccf..ca062f2 100644
+--- a/client/pages/Fighters.tsx
++++ b/client/pages/Fighters.tsx
+@@ -18,6 +18,11 @@ export default function Fighters() {
+   const [searchTerm, setSearchTerm] = useState("");
+   const [selectedWeightClass, setSelectedWeightClass] = useState("all");
+   const [sortBy, setSortBy] = useState("name");
++  const [visibleCount, setVisibleCount] = useState(48);
++
++  // Reset how many are shown whenever the filters/search/sort change, so a
++  // narrowed-down search doesn't stay stuck at a leftover pagination offset
++  const resetPagination = () => setVisibleCount(48);
+ 
+   // Get unique weight classes (plus synthetic "Legends" entry)
+   const weightClasses = useMemo(() => {
+@@ -232,7 +237,7 @@ export default function Fighters() {
+                 type="text"
+                 placeholder="Search fighters..."
+                 value={searchTerm}
+-                onChange={(e) => setSearchTerm(e.target.value)}
++                onChange={(e) => { setSearchTerm(e.target.value); resetPagination(); }}
+                 className="w-full bg-ufc-black text-white border border-ufc-metallic-dark rounded p-3 pl-10 font-oswald tracking-wide focus:outline-none focus:border-ufc-red"
+               />
+               <Search className="absolute left-3 top-3 w-5 h-5 text-ufc-metallic" />
+@@ -242,7 +247,7 @@ export default function Fighters() {
+             <div className="relative">
+               <select
+                 value={selectedWeightClass}
+-                onChange={(e) => setSelectedWeightClass(e.target.value)}
++                onChange={(e) => { setSelectedWeightClass(e.target.value); resetPagination(); }}
+                 className="w-full bg-ufc-black text-white border border-ufc-metallic-dark rounded p-3 font-oswald tracking-wide focus:outline-none focus:border-ufc-red appearance-none"
+               >
+                 <option value="all">All Fighters</option>
+@@ -260,7 +265,7 @@ export default function Fighters() {
+             <div className="relative">
+               <select
+                 value={sortBy}
+-                onChange={(e) => setSortBy(e.target.value)}
++                onChange={(e) => { setSortBy(e.target.value); resetPagination(); }}
+                 className="w-full bg-ufc-black text-white border border-ufc-metallic-dark rounded p-3 font-oswald tracking-wide focus:outline-none focus:border-ufc-red appearance-none"
+               >
+                 <option value="name">Sort by Name</option>
+@@ -275,11 +280,23 @@ export default function Fighters() {
+ 
+         {/* Fighters Grid */}
+         {filteredFighters.length > 0 ? (
+-          <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+-            {filteredFighters.map((fighter) => (
+-              <FighterCard key={fighter.id} fighter={fighter} />
+-            ))}
+-          </div>
++          <>
++            <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
++              {filteredFighters.slice(0, visibleCount).map((fighter) => (
++                <FighterCard key={fighter.id} fighter={fighter} />
++              ))}
++            </div>
++            {visibleCount < filteredFighters.length && (
++              <div className="text-center mt-10">
++                <button
++                  onClick={() => setVisibleCount((c) => c + 48)}
++                  className="px-8 py-3 bg-ufc-red text-white font-display-alt tracking-widest hover:bg-ufc-red/90 transition"
++                >
++                  LOAD MORE ({filteredFighters.length - visibleCount} remaining)
++                </button>
++              </div>
++            )}
++          </>
+         ) : (
+           <div className="text-center py-20">
+             <div className="fight-card p-8 max-w-md mx-auto">
+diff --git a/client/services/octagonApi.ts b/client/services/octagonApi.ts
+index 359b5b0..4cda919 100644
+--- a/client/services/octagonApi.ts
++++ b/client/services/octagonApi.ts
+@@ -1,6 +1,6 @@
+ import { OctagonFighter, OctagonDivision, OctagonRankings, AppFighter } from '@shared/octagon-api';
+ import { fallbackFighters, getFightersByWeightClass, searchFighters } from '../data/fallbackFighters';
+-import { getCsvFighterMerge } from './ufcData';
++import { getCsvFighterMerge, getAllAppFightersFromCsv } from './ufcData';
+ import { transformToOctagonFighter } from '@shared/octagon-transform';
+ 
+ /**
+@@ -88,6 +88,25 @@ class OctagonApiService {
+   }
+ 
+   async getAllFighters(): Promise<OctagonFighter[]> {
++    // The full ~4,500-fighter dataset is the real roster now. The live API
++    // (and fallbackFighters.ts) previously decided *which* fighters showed
++    // up at all, capping the browsable roster at ~143 hardcoded entries.
++    // fallbackFighters.ts is now only used to fill in bio fields (nickname,
++    // nationality, image, current rank) the CSV doesn't have.
++    try {
++      const fallbackByName = new Map(
++        fallbackFighters.map((f) => [f.name.toLowerCase(), f]),
++      );
++      const csvFighters = await getAllAppFightersFromCsv(fallbackByName);
++      if (csvFighters.length > 0) {
++        this.usingFallback = false;
++        return csvFighters.map(transformToOctagonFighter);
++      }
++    } catch (error) {
++      console.warn('⚠️ Failed to build roster from CSV dataset, falling back:', error);
++    }
++
++    // Only reached if the CSV itself failed to load for some reason.
+     try {
+       const data = await this.fetchApi<OctagonFighter[] | { fighters: OctagonFighter[] }>('/api/fighters', 2);
+       
+diff --git a/client/services/ufcData.ts b/client/services/ufcData.ts
+index 627bc1f..e041857 100644
+--- a/client/services/ufcData.ts
++++ b/client/services/ufcData.ts
+@@ -389,6 +389,37 @@ export async function getMostRecentWeightClassForFighter(
+   return normalizeWeightClass(relevant[0].Weight_Class) || undefined;
+ }
+ 
++let _weightClassMap: Map<string, string> | null = null;
++
++/**
++ * Same result as calling getMostRecentWeightClassForFighter() once per
++ * fighter, but computed in a single pass over the fight history instead of
++ * one scan per fighter. Needed for building the full ~4,500-fighter roster
++ * without doing thousands of separate O(n) scans.
++ */
++export async function getWeightClassMap(): Promise<Map<string, string>> {
++  if (_weightClassMap) return _weightClassMap;
++  const history = await getFightHistory();
++  const latestDateByName = new Map<string, string>();
++  const map = new Map<string, string>();
++
++  for (const row of history) {
++    if (!row.Weight_Class) continue;
++    for (const rawName of [row.Fighter_1, row.Fighter_2]) {
++      const key = rawName.trim().toLowerCase();
++      if (!key) continue;
++      const prevDate = latestDateByName.get(key);
++      if (!prevDate || row.Event_Date > prevDate) {
++        latestDateByName.set(key, row.Event_Date);
++        const wc = normalizeWeightClass(row.Weight_Class);
++        if (wc) map.set(key, wc);
++      }
++    }
++  }
++  _weightClassMap = map;
++  return map;
++}
++
+ export interface CsvFighterMerge {
+   wins: number;
+   losses: number;
+@@ -535,3 +566,49 @@ export async function getCsvFighterMerge(name: string): Promise<CsvFighterMerge
+     stats,
+   };
+ }
++
++/**
++ * Builds the complete fighter roster (~4,500 fighters) directly from the
++ * real dataset, instead of the old ~143-entry hardcoded list. Bio fields
++ * the CSV doesn't have (nickname, nationality, image, current rank) are
++ * filled in from fallbackFighters.ts when a name matches; fighters not in
++ * that curated list simply get blank/generic values for those fields
++ * rather than being excluded from the roster entirely.
++ */
++export async function getAllAppFightersFromCsv(
++  fallbackByName: Map<string, import("@shared/octagon-api").AppFighter>,
++): Promise<import("@shared/octagon-api").AppFighter[]> {
++  const [rows, weightClassMap] = await Promise.all([
++    getFighterStatsList(),
++    getWeightClassMap(),
++  ]);
++
++  const results: import("@shared/octagon-api").AppFighter[] = [];
++  for (const row of rows) {
++    const name = row.Fighter_Name?.trim();
++    if (!name) continue; // skip malformed/blank rows rather than showing an empty card
++
++    const wins = parseInt(row.Wins, 10) || 0;
++    const losses = parseInt(row.Losses, 10) || 0;
++    const draws = parseInt(row.Draws, 10) || 0;
++    const bio = fallbackByName.get(name.toLowerCase());
++    const slug = row.Fighter_URL?.split("/").filter(Boolean).pop() || name;
++
++    results.push({
++      id: bio?.id || `csv-${slug}`,
++      name: name.toUpperCase(),
++      nickname: bio?.nickname || "",
++      record: { wins, losses, draws },
++      weightClass: weightClassMap.get(name.toLowerCase()) || bio?.weightClass || "",
++      rank: bio?.rank,
++      age: ageFromDob(row.DOB) ?? bio?.age,
++      height: formatHeightFromCsv(row.Height) || bio?.height,
++      reach: formatReachFromCsv(row.Reach) || bio?.reach,
++      stance: row.Stance?.trim() || bio?.stance,
++      nationality: bio?.nationality,
++      imageUrl: bio?.imageUrl,
++      stats: deriveRealStats(row, { wins, losses, draws }),
++    });
++  }
++  return results;
++}

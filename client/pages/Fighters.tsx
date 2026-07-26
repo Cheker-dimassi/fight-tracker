@@ -18,6 +18,11 @@ export default function Fighters() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedWeightClass, setSelectedWeightClass] = useState("all");
   const [sortBy, setSortBy] = useState("name");
+  const [visibleCount, setVisibleCount] = useState(48);
+
+  // Reset how many are shown whenever the filters/search/sort change, so a
+  // narrowed-down search doesn't stay stuck at a leftover pagination offset
+  const resetPagination = () => setVisibleCount(48);
 
   // Get unique weight classes (plus synthetic "Legends" entry)
   const weightClasses = useMemo(() => {
@@ -232,7 +237,7 @@ export default function Fighters() {
                 type="text"
                 placeholder="Search fighters..."
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={(e) => { setSearchTerm(e.target.value); resetPagination(); }}
                 className="w-full bg-ufc-black text-white border border-ufc-metallic-dark rounded p-3 pl-10 font-oswald tracking-wide focus:outline-none focus:border-ufc-red"
               />
               <Search className="absolute left-3 top-3 w-5 h-5 text-ufc-metallic" />
@@ -242,7 +247,7 @@ export default function Fighters() {
             <div className="relative">
               <select
                 value={selectedWeightClass}
-                onChange={(e) => setSelectedWeightClass(e.target.value)}
+                onChange={(e) => { setSelectedWeightClass(e.target.value); resetPagination(); }}
                 className="w-full bg-ufc-black text-white border border-ufc-metallic-dark rounded p-3 font-oswald tracking-wide focus:outline-none focus:border-ufc-red appearance-none"
               >
                 <option value="all">All Fighters</option>
@@ -260,7 +265,7 @@ export default function Fighters() {
             <div className="relative">
               <select
                 value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
+                onChange={(e) => { setSortBy(e.target.value); resetPagination(); }}
                 className="w-full bg-ufc-black text-white border border-ufc-metallic-dark rounded p-3 font-oswald tracking-wide focus:outline-none focus:border-ufc-red appearance-none"
               >
                 <option value="name">Sort by Name</option>
@@ -275,11 +280,23 @@ export default function Fighters() {
 
         {/* Fighters Grid */}
         {filteredFighters.length > 0 ? (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {filteredFighters.map((fighter) => (
-              <FighterCard key={fighter.id} fighter={fighter} />
-            ))}
-          </div>
+          <>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {filteredFighters.slice(0, visibleCount).map((fighter) => (
+                <FighterCard key={fighter.id} fighter={fighter} />
+              ))}
+            </div>
+            {visibleCount < filteredFighters.length && (
+              <div className="text-center mt-10">
+                <button
+                  onClick={() => setVisibleCount((c) => c + 48)}
+                  className="px-8 py-3 bg-ufc-red text-white font-display-alt tracking-widest hover:bg-ufc-red/90 transition"
+                >
+                  LOAD MORE ({filteredFighters.length - visibleCount} remaining)
+                </button>
+              </div>
+            )}
+          </>
         ) : (
           <div className="text-center py-20">
             <div className="fight-card p-8 max-w-md mx-auto">

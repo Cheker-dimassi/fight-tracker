@@ -1,6 +1,6 @@
 import { OctagonFighter, OctagonDivision, OctagonRankings, AppFighter } from '@shared/octagon-api';
 import { fallbackFighters, getFightersByWeightClass, searchFighters } from '../data/fallbackFighters';
-import { getCsvFighterMerge } from './ufcData';
+import { getCsvFighterMerge, getAllAppFightersFromCsv } from './ufcData';
 import { transformToOctagonFighter } from '@shared/octagon-transform';
 
 /**
@@ -88,6 +88,25 @@ class OctagonApiService {
   }
 
   async getAllFighters(): Promise<OctagonFighter[]> {
+    // The full ~4,500-fighter dataset is the real roster now. The live API
+    // (and fallbackFighters.ts) previously decided *which* fighters showed
+    // up at all, capping the browsable roster at ~143 hardcoded entries.
+    // fallbackFighters.ts is now only used to fill in bio fields (nickname,
+    // nationality, image, current rank) the CSV doesn't have.
+    try {
+      const fallbackByName = new Map(
+        fallbackFighters.map((f) => [f.name.toLowerCase(), f]),
+      );
+      const csvFighters = await getAllAppFightersFromCsv(fallbackByName);
+      if (csvFighters.length > 0) {
+        this.usingFallback = false;
+        return csvFighters.map(transformToOctagonFighter);
+      }
+    } catch (error) {
+      console.warn('⚠️ Failed to build roster from CSV dataset, falling back:', error);
+    }
+
+    // Only reached if the CSV itself failed to load for some reason.
     try {
       const data = await this.fetchApi<OctagonFighter[] | { fighters: OctagonFighter[] }>('/api/fighters', 2);
       

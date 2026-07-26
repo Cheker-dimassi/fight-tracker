@@ -389,6 +389,37 @@ export async function getMostRecentWeightClassForFighter(
   return normalizeWeightClass(relevant[0].Weight_Class) || undefined;
 }
 
+let _weightClassMap: Map<string, string> | null = null;
+
+/**
+ * Same result as calling getMostRecentWeightClassForFighter() once per
+ * fighter, but computed in a single pass over the fight history instead of
+ * one scan per fighter. Needed for building the full ~4,500-fighter roster
+ * without doing thousands of separate O(n) scans.
+ */
+export async function getWeightClassMap(): Promise<Map<string, string>> {
+  if (_weightClassMap) return _weightClassMap;
+  const history = await getFightHistory();
+  const latestDateByName = new Map<string, string>();
+  const map = new Map<string, string>();
+
+  for (const row of history) {
+    if (!row.Weight_Class) continue;
+    for (const rawName of [row.Fighter_1, row.Fighter_2]) {
+      const key = rawName.trim().toLowerCase();
+      if (!key) continue;
+      const prevDate = latestDateByName.get(key);
+      if (!prevDate || row.Event_Date > prevDate) {
+        latestDateByName.set(key, row.Event_Date);
+        const wc = normalizeWeightClass(row.Weight_Class);
+        if (wc) map.set(key, wc);
+      }
+    }
+  }
+  _weightClassMap = map;
+  return map;
+}
+
 export interface CsvFighterMerge {
   wins: number;
   losses: number;
@@ -534,4 +565,50 @@ export async function getCsvFighterMerge(name: string): Promise<CsvFighterMerge 
     age: ageFromDob(row.DOB),
     stats,
   };
+}
+
+/**
+ * Builds the complete fighter roster (~4,500 fighters) directly from the
+ * real dataset, instead of the old ~143-entry hardcoded list. Bio fields
+ * the CSV doesn't have (nickname, nationality, image, current rank) are
+ * filled in from fallbackFighters.ts when a name matches; fighters not in
+ * that curated list simply get blank/generic values for those fields
+ * rather than being excluded from the roster entirely.
+ */
+export async function getAllAppFightersFromCsv(
+  fallbackByName: Map<string, import("@shared/octagon-api").AppFighter>,
+): Promise<import("@shared/octagon-api").AppFighter[]> {
+  const [rows, weightClassMap] = await Promise.all([
+    getFighterStatsList(),
+    getWeightClassMap(),
+  ]);
+
+  const results: import("@shared/octagon-api").AppFighter[] = [];
+  for (const row of rows) {
+    const name = row.Fighter_Name?.trim();
+    if (!name) continue; // skip malformed/blank rows rather than showing an empty card
+
+    const wins = parseInt(row.Wins, 10) || 0;
+    const losses = parseInt(row.Losses, 10) || 0;
+    const draws = parseInt(row.Draws, 10) || 0;
+    const bio = fallbackByName.get(name.toLowerCase());
+    const slug = row.Fighter_URL?.split("/").filter(Boolean).pop() || name;
+
+    results.push({
+      id: bio?.id || `csv-${slug}`,
+      name: name.toUpperCase(),
+      nickname: bio?.nickname || "",
+      record: { wins, losses, draws },
+      weightClass: weightClassMap.get(name.toLowerCase()) || bio?.weightClass || "",
+      rank: bio?.rank,
+      age: ageFromDob(row.DOB) ?? bio?.age,
+      height: formatHeightFromCsv(row.Height) || bio?.height,
+      reach: formatReachFromCsv(row.Reach) || bio?.reach,
+      stance: row.Stance?.trim() || bio?.stance,
+      nationality: bio?.nationality,
+      imageUrl: bio?.imageUrl,
+      stats: deriveRealStats(row, { wins, losses, draws }),
+    });
+  }
+  return results;
 }
